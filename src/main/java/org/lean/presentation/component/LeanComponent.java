@@ -2,6 +2,12 @@ package org.lean.presentation.component;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.apache.hop.core.logging.ILogChannel;
 import org.apache.hop.core.logging.LoggingObject;
 import org.apache.hop.metadata.api.HopMetadataBase;
@@ -23,13 +29,6 @@ import org.lean.presentation.page.LeanPage;
 import org.lean.presentation.theme.LeanTheme;
 import org.lean.render.IRenderContext;
 import org.lean.render.context.SimpleRenderContext;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Main component class encapsulating component plugins through ILeanComponent
@@ -184,7 +183,7 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
 
     LeanPresentation presentation = new LeanPresentation();
     presentation.setName(name);
-    LeanPage page = new LeanPage(0, width, height, 0, 0, 0, 0);
+    LeanPage page = new LeanPage(width, height, 0, 0, 0, 0);
     presentation.getPages().add(page);
     presentation.getConnectors().addAll(connectors);
 
@@ -196,7 +195,7 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
 
     page.getComponents().add(c);
 
-    IRenderContext renderContext = new SimpleRenderContext(width, height, themes);
+    IRenderContext renderContext = new SimpleRenderContext(width, height, themes, metadataProvider);
     LoggingObject loggingObject = new LoggingObject("componentRender");
 
     // We don't pass in any new parameters
@@ -214,12 +213,16 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
     return renderPage.getSvgXml();
   }
 
-  /** @return the component */
+  /**
+   * @return the component
+   */
   public ILeanComponent getComponent() {
     return component;
   }
 
-  /** @param component the component to set */
+  /**
+   * @param component the component to set
+   */
   public void setComponent(ILeanComponent component) {
     this.component = component;
   }
@@ -241,7 +244,9 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
     return layout;
   }
 
-  /** @param layout The layout to set */
+  /**
+   * @param layout The layout to set
+   */
   public void setLayout(LeanLayout layout) {
     this.layout = layout;
   }
@@ -255,7 +260,9 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
     return rotation;
   }
 
-  /** @param rotation The rotation to set */
+  /**
+   * @param rotation The rotation to set
+   */
   public void setRotation(String rotation) {
     this.rotation = rotation;
   }
@@ -269,7 +276,9 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
     return transparency;
   }
 
-  /** @param transparency The transparency to set */
+  /**
+   * @param transparency The transparency to set
+   */
   public void setTransparency(String transparency) {
     this.transparency = transparency;
   }
@@ -283,7 +292,9 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
     return clipSize;
   }
 
-  /** @param clipSize The clipSize to set */
+  /**
+   * @param clipSize The clipSize to set
+   */
   public void setClipSize(LeanSize clipSize) {
     this.clipSize = clipSize;
   }
@@ -297,7 +308,9 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
     return processSourceDataListeners;
   }
 
-  /** @param processSourceDataListeners The processSourceDataListeners to set */
+  /**
+   * @param processSourceDataListeners The processSourceDataListeners to set
+   */
   public void setProcessSourceDataListeners(
       List<IProcessSourceDataListener> processSourceDataListeners) {
     this.processSourceDataListeners = processSourceDataListeners;
@@ -312,7 +325,9 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
     return doLayoutListeners;
   }
 
-  /** @param doLayoutListeners The doLayoutListeners to set */
+  /**
+   * @param doLayoutListeners The doLayoutListeners to set
+   */
   public void setDoLayoutListeners(List<IDoLayoutListener> doLayoutListeners) {
     this.doLayoutListeners = doLayoutListeners;
   }

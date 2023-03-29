@@ -13,7 +13,17 @@ public class LeanInteractionAction {
      * from the value clicked on. In either case you can also set this string value where you
      * clicked on as a parameter.
      */
-    OPEN_PRESENTATION
+    OPEN_PRESENTATION,
+
+    /**
+     * Open a web link in the same tab.
+     */
+    OPEN_LINK_SAME_TAB,
+
+    /**
+     * Open a web link in a new tab
+     */
+    OPEN_LINK_NEW_TAB,
   }
 
   /** The type of action to take. */

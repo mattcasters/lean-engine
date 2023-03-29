@@ -1,16 +1,18 @@
 package org.lean.render.context;
 
-import org.lean.core.LeanColorRGB;
-import org.lean.core.LeanSize;
-import org.lean.presentation.theme.LeanTheme;
-import org.lean.render.IRenderContext;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.hop.metadata.api.IHopMetadataProvider;
+import org.lean.core.LeanColorRGB;
+import org.lean.core.LeanSize;
+import org.lean.core.exception.LeanException;
+import org.lean.presentation.theme.LeanTheme;
+import org.lean.render.IRenderContext;
 
 public class SimpleRenderContext implements IRenderContext {
+  private final IHopMetadataProvider metadataProvider;
 
   private LeanSize canvasSize;
   private List<LeanTheme> themes;
@@ -18,18 +20,21 @@ public class SimpleRenderContext implements IRenderContext {
   private Map<String, Map<String, Integer>> themeValueColorMap;
   private Map<String, Integer> themeColorIndexMap;
 
-  public SimpleRenderContext() {
+  public SimpleRenderContext(IHopMetadataProvider metadataProvider) {
+    this.metadataProvider = metadataProvider;
     themes = new ArrayList<>();
     themeValueColorMap = new HashMap<>();
     themeColorIndexMap = new HashMap<>();
   }
 
-  public SimpleRenderContext(int width, int height, List<LeanTheme> themes) {
-    this(new LeanSize(width, height), themes);
+  public SimpleRenderContext(
+      int width, int height, List<LeanTheme> themes, IHopMetadataProvider metadataProvider) {
+    this(new LeanSize(width, height), themes, metadataProvider);
   }
 
-  public SimpleRenderContext(LeanSize canvasSize, List<LeanTheme> themes) {
-    this();
+  public SimpleRenderContext(
+      LeanSize canvasSize, List<LeanTheme> themes, IHopMetadataProvider metadataProvider) {
+    this(metadataProvider);
     this.canvasSize = canvasSize;
     this.themes = themes;
   }
@@ -40,17 +45,24 @@ public class SimpleRenderContext implements IRenderContext {
    * @param themeName the scheme name to look for
    * @return The theme scheme or null if nothing could be found
    */
-  public LeanTheme lookupTheme(String themeName) {
+  @Override
+  public LeanTheme lookupTheme(String themeName) throws LeanException {
     for (LeanTheme theme : themes) {
       if (theme.getName().equalsIgnoreCase(themeName)) {
         return theme;
       }
     }
-    return null;
+    // Try again in the metadata
+    //
+    try {
+      return metadataProvider.getSerializer(LeanTheme.class).load(themeName);
+    } catch (Exception e) {
+      throw new LeanException("Error loading theme '" + themeName + "' from the metadata", e);
+    }
   }
 
   @Override
-  public LeanColorRGB getStableColor(String themeName, String value) {
+  public LeanColorRGB getStableColor(String themeName, String value) throws LeanException {
 
     LeanTheme theme = lookupTheme(themeName);
     if (theme == null) {
@@ -114,7 +126,9 @@ public class SimpleRenderContext implements IRenderContext {
     return canvasSize;
   }
 
-  /** @param canvasSize The canvasSize to set */
+  /**
+   * @param canvasSize The canvasSize to set
+   */
   public void setCanvasSize(LeanSize canvasSize) {
     this.canvasSize = canvasSize;
   }
@@ -128,8 +142,19 @@ public class SimpleRenderContext implements IRenderContext {
     return themes;
   }
 
-  /** @param themes The themes to set */
+  /**
+   * @param themes The themes to set
+   */
   public void setThemes(List<LeanTheme> themes) {
     this.themes = themes;
+  }
+
+  /**
+   * Gets metadataProvider
+   *
+   * @return value of metadataProvider
+   */
+  public IHopMetadataProvider getMetadataProvider() {
+    return metadataProvider;
   }
 }

@@ -1,5 +1,7 @@
 package org.lean.render.context;
 
+import org.apache.hop.metadata.api.IHopMetadataProvider;
+import org.lean.core.exception.LeanException;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.theme.LeanTheme;
 import org.lean.render.IRenderContext;
@@ -8,12 +10,13 @@ public class PresentationRenderContext extends SimpleRenderContext implements IR
 
   private LeanPresentation presentation;
 
-  public PresentationRenderContext() {
-    super();
+  public PresentationRenderContext(IHopMetadataProvider metadataProvider) {
+    super(metadataProvider);
   }
 
-  public PresentationRenderContext(LeanPresentation presentation) {
-    this();
+  public PresentationRenderContext(
+      LeanPresentation presentation, IHopMetadataProvider metadataProvider) {
+    this(metadataProvider);
     this.presentation = presentation;
   }
 
@@ -22,15 +25,19 @@ public class PresentationRenderContext extends SimpleRenderContext implements IR
    * @return The theme or null if none is found.
    */
   @Override
-  public LeanTheme lookupTheme(String themeName) {
-
+  public LeanTheme lookupTheme(String themeName) throws LeanException {
     // If no theme name is given, them we'll use the default of the presentation
     //
+    LeanTheme theme;
     if (themeName == null) {
-      return presentation.getDefaultTheme();
+      theme = presentation.getDefaultTheme();
     } else {
-      return presentation.lookupTheme(themeName);
+      theme = presentation.lookupTheme(themeName);
     }
+    if (theme != null) {
+      return theme;
+    }
+    return super.lookupTheme(themeName);
   }
 
   /**
@@ -42,7 +49,9 @@ public class PresentationRenderContext extends SimpleRenderContext implements IR
     return presentation;
   }
 
-  /** @param presentation The presentation to set */
+  /**
+   * @param presentation The presentation to set
+   */
   public void setPresentation(LeanPresentation presentation) {
     this.presentation = presentation;
   }

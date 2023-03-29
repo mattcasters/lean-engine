@@ -2,20 +2,23 @@ package org.lean.presentation.connector.types.filter;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import org.apache.hop.core.exception.HopException;
 import org.apache.hop.core.row.IRowMeta;
 import org.apache.hop.core.row.IValueMeta;
-import org.lean.core.ILeanRowListener;
+import org.apache.hop.core.variables.IVariables;
 import org.lean.core.exception.LeanException;
 import org.lean.presentation.connector.LeanConnector;
 import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
 import org.lean.presentation.datacontext.IDataContext;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 /** Simple filter for rows with specific field values */
 @JsonDeserialize(as = LeanSimpleFilterConnector.class)
@@ -61,8 +64,7 @@ public class LeanSimpleFilterConnector extends LeanBaseConnector implements ILea
   }
 
   @Override
-  public void startStreaming(IDataContext dataContext) throws LeanException {
-
+  public void startStreaming(final IDataContext dataContext) throws LeanException {
     // which connector do we read from?
     //
     LeanConnector connector = dataContext.getConnector(getSourceConnectorName());
@@ -82,9 +84,12 @@ public class LeanSimpleFilterConnector extends LeanBaseConnector implements ILea
     // What does the input look like?
     //
     final IRowMeta inputRowMeta = connector.describeOutput(dataContext);
+    final IVariables variables = dataContext.getVariables();
 
     // What are the simple filter row indexes?
     //
+    Map<String, Set<String>> fieldFiltersMap = new HashMap<>();
+
     int[] valueIndexes = new int[filterValues.size()];
     for (int i = 0; i < valueIndexes.length; i++) {
       SimpleFilterValue filterValue = filterValues.get(i);
@@ -96,6 +101,11 @@ public class LeanSimpleFilterConnector extends LeanBaseConnector implements ILea
                 + "' in input of connector '"
                 + getSourceConnectorName());
       }
+      IValueMeta valueMeta = inputRowMeta.getValueMeta(valueIndexes[i]);
+      String valueName = valueMeta.getName();
+
+      Set<String> values = fieldFiltersMap.computeIfAbsent(valueName, e -> new HashSet<>());
+      values.add(variables.resolve(filterValue.getFilterValue()));
     }
 
     // Add a row listener to the parent connector
@@ -103,48 +113,43 @@ public class LeanSimpleFilterConnector extends LeanBaseConnector implements ILea
     connector
         .getConnector()
         .addRowListener(
-            new ILeanRowListener() {
-              private Object[] previousRow = null;
+            (rowMeta, rowData) -> {
+              if (rowData == null) {
+                outputDone();
+                finishedQueue.add(new Object());
+                return;
+              }
 
-              @Override
-              public void rowReceived(IRowMeta rowMeta, Object[] rowData) throws LeanException {
+              boolean pass = true;
+              for (int i = 0; i < valueIndexes.length; i++) {
+                SimpleFilterValue simpleFilterValue = filterValues.get(i);
+                int valueIndex = valueIndexes[i];
 
-                if (rowData == null) {
-                  outputDone();
-                  finishedQueue.add(new Object());
-                  return;
-                }
+                IValueMeta valueMeta = inputRowMeta.getValueMeta(valueIndex);
 
-                boolean pass = true;
-                for (int i = 0; i < valueIndexes.length; i++) {
+                // What are the filter values for this field?
+                //
+                Set<String> filterValues =
+                    fieldFiltersMap.computeIfAbsent(valueMeta.getName(), e -> new HashSet<>());
 
-                  SimpleFilterValue simpleFilterValue = filterValues.get(i);
-                  int valueIndex = valueIndexes[i];
+                try {
+                  String rowValue = valueMeta.getString(rowData[valueIndex]);
 
-                  String filterValue = simpleFilterValue.getFilterValue();
-                  IValueMeta valueMeta = inputRowMeta.getValueMeta(valueIndex);
+                  if (!filterValues.contains(rowValue)) {
+                    pass = false;
 
-                  try {
-                    String rowValue = valueMeta.getString(rowData[valueIndex]);
-
-                    if (filterValue == null && rowValue != null
-                        || filterValue != null && rowValue == null
-                        || filterValue.equals(rowValue)) {
-                      pass = false;
-
-                      // stop looking
-                      break;
-                    }
-                  } catch (HopException e) {
-                    throw new LeanException(
-                        "Unable to convert simple filter input row value '" + valueMeta.toString(),
-                        e);
+                    // stop looking
+                    break;
                   }
+                } catch (HopException e) {
+                  throw new LeanException(
+                      "Unable to convert simple filter input row value '" + valueMeta.toString(),
+                      e);
                 }
+              }
 
-                if (pass) {
-                  passToRowListeners(rowMeta, rowData);
-                }
+              if (pass) {
+                passToRowListeners(rowMeta, rowData);
               }
             });
 
@@ -157,7 +162,8 @@ public class LeanSimpleFilterConnector extends LeanBaseConnector implements ILea
   public void waitUntilFinished() throws LeanException {
     try {
       while (finishedQueue.poll(1, TimeUnit.DAYS) == null) {
-        ;
+        // This loop will stop once the last row is read in the row listener and an object is added
+        // to the queue.
       }
     } catch (InterruptedException e) {
       throw new LeanException("Interrupted while waiting for more rows in connector", e);
@@ -174,7 +180,9 @@ public class LeanSimpleFilterConnector extends LeanBaseConnector implements ILea
     return filterValues;
   }
 
-  /** @param filterValues The filterValues to set */
+  /**
+   * @param filterValues The filterValues to set
+   */
   public void setFilterValues(List<SimpleFilterValue> filterValues) {
     this.filterValues = filterValues;
   }

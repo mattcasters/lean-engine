@@ -90,7 +90,7 @@ public class LeanLabelComponent extends LeanBaseComponent implements ILeanCompon
     LeanRenderPage currentRenderPage = results.getCurrentRenderPage(page);
     HopSvgGraphics2D gc = currentRenderPage.getGc();
 
-    // Set the font so we can calculate the correct text imageSize
+    // Set the font, so we can calculate the correct text imageSize
     //
     enableFont(gc, lookupDefaultFont(renderContext));
 

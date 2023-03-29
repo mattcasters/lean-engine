@@ -226,13 +226,23 @@ public interface ILeanComponent extends Cloneable {
   final class LeanComponentObjectFactory implements IHopMetadataObjectFactory {
     @Override
     public Object createObject(String id, Object parentObject) throws HopException {
+      if (id == null) {
+        return null;
+      }
       PluginRegistry registry = PluginRegistry.getInstance();
       IPlugin plugin = registry.getPlugin(LeanComponentPluginType.class, id);
+      if (plugin == null) {
+        throw new HopException("Unable to find Lean component plugin with ID '" + id + "' in the plugin registry.");
+      }
       return registry.loadClass(plugin);
     }
 
     @Override
     public String getObjectId(Object object) throws HopException {
+      if (object == null) {
+        // Unable to retrieve Lean component plugin ID of null object.
+        return null;
+      }
       return ((ILeanComponent) object).getPluginId();
     }
   }

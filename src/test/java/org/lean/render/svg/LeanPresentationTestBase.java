@@ -1,5 +1,11 @@
 package org.lean.render.svg;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.apache.hop.core.logging.ILogChannel;
 import org.apache.hop.core.logging.ILoggingObject;
 import org.apache.hop.core.logging.LoggingObject;
@@ -18,13 +24,6 @@ import org.lean.presentation.layout.LeanLayoutResults;
 import org.lean.presentation.layout.LeanRenderPage;
 import org.lean.render.IRenderContext;
 import org.lean.render.context.PresentationRenderContext;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -96,7 +95,7 @@ public class LeanPresentationTestBase {
       LeanPresentation presentation, String filename, List<DurationRequest> durationRequests)
       throws Exception {
 
-    IRenderContext renderContext = new PresentationRenderContext(presentation);
+    IRenderContext renderContext = new PresentationRenderContext(presentation, metadataProvider);
 
     LeanLayoutResults results =
         presentation.doLayout(parent, renderContext, metadataProvider, Collections.emptyList());

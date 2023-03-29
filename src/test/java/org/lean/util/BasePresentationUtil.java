@@ -72,7 +72,7 @@ public class BasePresentationUtil {
 
     // Create a one-page document
     //
-    LeanPage pageOne = LeanPage.getA4(1, portrait);
+    LeanPage pageOne = LeanPage.getA4(portrait);
     presentation.getPages().add(pageOne);
 
     // Get a bunch of rows in the output.
@@ -194,7 +194,9 @@ public class BasePresentationUtil {
     return metadataProvider;
   }
 
-  /** @param metadataProvider The metadataProvider to set */
+  /**
+   * @param metadataProvider The metadataProvider to set
+   */
   public void setMetadataProvider(IHopMetadataProvider metadataProvider) {
     this.metadataProvider = metadataProvider;
   }

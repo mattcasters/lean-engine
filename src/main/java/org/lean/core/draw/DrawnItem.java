@@ -251,6 +251,7 @@ public class DrawnItem {
     ComponentArea,
     Label,
     Cell,
+    Line,
     Header,
     Title,
     LegendTitle,

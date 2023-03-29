@@ -40,12 +40,7 @@ public abstract class LeanBaseAggregatingComponent extends LeanBaseComponent
   @HopMetadataProperty protected boolean showingHorizontalTotals;
 
   @HopMetadataProperty protected boolean showingVerticalTotals;
-  @JsonIgnore protected transient List<Integer> horizontalDimensionIndexes;
-  @JsonIgnore protected transient List<Integer> verticalDimensionIndexes;
-  @JsonIgnore protected transient List<Integer> factIndexes;
-  @JsonIgnore protected transient List<Map<List<String>, Object>> pivotMapList;
-  @JsonIgnore protected transient List<Map<List<String>, Long>> countMapList;
-  @JsonIgnore protected transient IRowMeta inputRowMeta;
+
   @HopMetadataProperty private LeanFont horizontalDimensionsFont;
   @HopMetadataProperty private LeanColorRGB horizontalDimensionsColor;
   @HopMetadataProperty private LeanFont verticalDimensionsFont;
@@ -60,6 +55,13 @@ public abstract class LeanBaseAggregatingComponent extends LeanBaseComponent
   @HopMetadataProperty private LeanColorRGB titleColor;
   @HopMetadataProperty private LeanColorRGB gridColor;
   @HopMetadataProperty private LeanColorRGB axisColor;
+
+  @JsonIgnore protected transient List<Integer> horizontalDimensionIndexes;
+  @JsonIgnore protected transient List<Integer> verticalDimensionIndexes;
+  @JsonIgnore protected transient List<Integer> factIndexes;
+  @JsonIgnore protected transient List<Map<List<String>, Object>> pivotMapList;
+  @JsonIgnore protected transient List<Map<List<String>, Long>> countMapList;
+  @JsonIgnore protected transient IRowMeta inputRowMeta;
 
   public LeanBaseAggregatingComponent() {
     this.horizontalDimensions = new ArrayList<>();

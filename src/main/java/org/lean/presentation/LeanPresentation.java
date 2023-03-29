@@ -10,17 +10,21 @@ import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hop.core.Const;
+import org.apache.hop.core.RowMetaAndData;
+import org.apache.hop.core.exception.HopException;
 import org.apache.hop.core.logging.ILogChannel;
 import org.apache.hop.core.logging.ILoggingObject;
 import org.apache.hop.core.logging.LogChannel;
 import org.apache.hop.core.logging.Metrics;
 import org.apache.hop.core.metrics.MetricsSnapshotType;
 import org.apache.hop.core.svg.HopSvgGraphics2D;
+import org.apache.hop.core.variables.IVariables;
 import org.apache.hop.metadata.api.HopMetadata;
 import org.apache.hop.metadata.api.HopMetadataBase;
 import org.apache.hop.metadata.api.HopMetadataProperty;
@@ -46,6 +50,7 @@ import org.lean.presentation.layout.LeanRenderPage;
 import org.lean.presentation.page.LeanPage;
 import org.lean.presentation.theme.LeanTheme;
 import org.lean.presentation.variable.LeanParameter;
+import org.lean.presentation.variable.LeanParameterMapping;
 import org.lean.render.IRenderContext;
 import org.lean.render.context.PresentationRenderContext;
 
@@ -71,12 +76,14 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
   private List<LeanConnector> connectors;
 
   @HopMetadataProperty private List<LeanInteraction> interactions;
+  @HopMetadataProperty private List<LeanParameterMapping> parameterMappings;
 
   public LeanPresentation() {
     pages = new ArrayList<>();
     connectors = new ArrayList<>();
     themes = new ArrayList<>();
     interactions = new ArrayList<>();
+    parameterMappings = new ArrayList<>();
   }
 
   /**
@@ -90,18 +97,11 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
     this.description = p.description;
     this.header = p.header == null ? null : new LeanPage(p.header);
     this.footer = p.footer == null ? null : new LeanPage(p.footer);
-    for (LeanPage page : p.pages) {
-      this.pages.add(new LeanPage(page));
-    }
-    for (LeanConnector c : p.connectors) {
-      this.connectors.add(new LeanConnector(c));
-    }
-    for (LeanTheme t : p.themes) {
-      this.themes.add(new LeanTheme(t));
-    }
-    for (LeanInteraction interaction : interactions) {
-      this.interactions.add(new LeanInteraction(interaction));
-    }
+    p.pages.forEach(page -> this.pages.add(new LeanPage(page)));
+    p.connectors.forEach(c -> this.connectors.add(new LeanConnector(c)));
+    p.themes.forEach(t -> this.themes.add(new LeanTheme(t)));
+    p.interactions.forEach(i -> this.interactions.add(new LeanInteraction(i)));
+    p.parameterMappings.forEach(m -> this.parameterMappings.add(new LeanParameterMapping(m)));
   }
 
   public static LeanPresentation fromJsonString(String jsonString) throws IOException {
@@ -144,20 +144,46 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
       throws LeanException {
 
     ILogChannel log = new LogChannel(getName(), parent, true);
+
+    log.logBasic("====> setting parameters: " + parameters.size());
+    for (LeanParameter parameter : parameters) {
+      log.logBasic("  ===> Setting parameter: " + parameter);
+    }
+
     PresentationDataContext presentationDataContext =
         new PresentationDataContext(this, metadataProvider);
 
-    // Apply the given variable values to the data context...
+    // See if we need to load the default theme from the metadata...
     //
-    for (LeanParameter variable : parameters) {
-      if (StringUtils.isNotEmpty(variable.getParameterName())) {
-        String name = variable.getParameterName();
-        String value = variable.getParameterValue();
-        presentationDataContext.getVariables().setVariable(name, Const.NVL(value, ""));
+    if (StringUtils.isNotEmpty(defaultThemeName) && lookupTheme(defaultThemeName) == null) {
+      try {
+        LeanTheme defaultTheme =
+            metadataProvider.getSerializer(LeanTheme.class).load(defaultThemeName);
+        if (defaultTheme == null) {
+          throw new LeanException(
+              "Specified default theme with name '"
+                  + defaultThemeName
+                  + "' is not present in the metadata");
+        }
+        // Simply keep it locally
+        //
+        themes.add(defaultTheme);
+      } catch (HopException e) {
+        throw new LeanException(
+            "Error loading default theme " + defaultThemeName + " from the metadata", e);
       }
     }
 
+    // Apply the given variable values to the data context...
+    //
+    applyParametersToContext(parameters, presentationDataContext);
+
+    // See if more parameters need to be set using one or more connectors
+    //
+    applyParameterMappings(presentationDataContext);
+
     LeanLayoutResults results = new LeanLayoutResults(log);
+    results.setDataContext(presentationDataContext);
 
     log.logBasic("Started layout of presentation");
     log.snap(
@@ -168,7 +194,6 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
 
     try {
       List<LeanPage> pagesCopy = new ArrayList<>(pages);
-      pagesCopy.sort(Comparator.comparingInt(LeanPage::getPageNumber));
 
       // Loop over the components on every page, generate layout results...
       //
@@ -203,6 +228,85 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
     }
   }
 
+  private void applyParameterMappings(PresentationDataContext presentationDataContext)
+      throws LeanException {
+    IVariables variables = presentationDataContext.getVariables();
+
+    for (LeanParameterMapping parameterMapping : parameterMappings) {
+      // Read rows from the connector specified.  The data context has the metadata provider.
+      //
+      String connectorName = variables.resolve(parameterMapping.getConnectorName());
+      if (StringUtils.isEmpty(connectorName)) {
+        throw new LeanException(
+            "Please specify a connector name to read rows of data from.  "
+                + "These rows can be used to set parameters in the presentation.");
+      }
+      String separator = variables.resolve(parameterMapping.getSeparator());
+
+      LeanConnector connector = presentationDataContext.getConnector(connectorName);
+      List<RowMetaAndData> rows = connector.retrieveRows(presentationDataContext);
+
+      Map<String, String> parametersMap = new HashMap<>();
+
+      for (LeanParameterMapping.FieldToParameterMapping mapping : parameterMapping.getMappings()) {
+        String fieldName = variables.resolve(mapping.getFieldName());
+        if (StringUtils.isEmpty(fieldName)) {
+          throw new LeanException(
+              "Please specify a field name to map when reading from connector " + connectorName);
+        }
+        String parameterName = variables.resolve(mapping.getParameterName());
+        if (StringUtils.isEmpty(parameterName)) {
+          throw new LeanException(
+              "Please specify a name for a parameter to set for field name " + fieldName);
+        }
+
+        // Concatenate all input rows to flatten to a single value per field.
+        //
+        for (RowMetaAndData row : rows) {
+          try {
+            String value = row.getString(fieldName, "");
+            String totalValue = parametersMap.get(parameterName);
+            if (totalValue == null) {
+              totalValue = value;
+            } else {
+              totalValue = Const.NVL(separator, "") + value;
+            }
+            parametersMap.put(parameterName, totalValue);
+
+          } catch (Exception e) {
+            throw new LeanException(
+                "Error converting an input row value to a string when mapping field "
+                    + fieldName
+                    + " to parameter "
+                    + parameterName,
+                e);
+          }
+        }
+      }
+
+      // Now that we have all the parameter values, set these in the data context.
+      //
+      parametersMap
+          .keySet()
+          .forEach(
+              parameterName -> {
+                String parameterValue = parametersMap.get(parameterName);
+                presentationDataContext.getVariables().setVariable(parameterName, parameterValue);
+              });
+    }
+  }
+
+  private void applyParametersToContext(
+      List<LeanParameter> parameters, PresentationDataContext presentationDataContext) {
+    for (LeanParameter variable : parameters) {
+      if (StringUtils.isNotEmpty(variable.getParameterName())) {
+        String name = variable.getParameterName();
+        String value = variable.getParameterValue();
+        presentationDataContext.getVariables().setVariable(name, Const.NVL(value, ""));
+      }
+    }
+  }
+
   /**
    * Render this presentation by rendering all the render pages in the layout results... At the end,
    * we'll have some stuff drawn on the Graphics Context of each render page...
@@ -218,7 +322,8 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
     ILogChannel log = results.getLog();
     PresentationDataContext presentationDataContext =
         new PresentationDataContext(this, metadataProvider);
-    PresentationRenderContext presentationRenderContext = new PresentationRenderContext(this);
+    PresentationRenderContext presentationRenderContext =
+        new PresentationRenderContext(this, metadataProvider);
 
     log.logBasic("Started rendering presentation");
     log.snap(
@@ -562,6 +667,16 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
   }
 
   /**
+   * Get the index of a logical page.
+   *
+   * @param page The page to index
+   * @return The index (page number) of the page
+   */
+  public int getPageIndex(LeanPage page) {
+    return pages.indexOf(page);
+  }
+
+  /**
    * @return the description
    */
   public String getDescription() {
@@ -683,5 +798,23 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
    */
   public void setInteractions(List<LeanInteraction> interactions) {
     this.interactions = interactions;
+  }
+
+  /**
+   * Gets parameterMappings
+   *
+   * @return value of parameterMappings
+   */
+  public List<LeanParameterMapping> getParameterMappings() {
+    return parameterMappings;
+  }
+
+  /**
+   * Sets parameterMappings
+   *
+   * @param parameterMappings value of parameterMappings
+   */
+  public void setParameterMappings(List<LeanParameterMapping> parameterMappings) {
+    this.parameterMappings = parameterMappings;
   }
 }

@@ -58,7 +58,7 @@ public class LeanTableComponent extends LeanBaseComponent implements ILeanCompon
 
   @HopMetadataProperty private boolean evenHeights;
 
-  @HopMetadataProperty private boolean headerOnEveryPage;
+    @HopMetadataProperty private boolean headerOnEveryPage;
 
   @HopMetadataProperty private boolean header;
 

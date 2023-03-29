@@ -1,6 +1,5 @@
 package org.lean.render.context;
 
-import org.apache.hop.metadata.api.IHopMetadataProvider;
 import org.apache.hop.metadata.serializer.memory.MemoryMetadataProvider;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,18 +17,18 @@ public class PresentationRenderContextTest {
 
   @Before
   public void setUp() throws LeanException {
-    IHopMetadataProvider metadataProvider = new MemoryMetadataProvider();
     LeanEnvironment.init();
   }
 
   @Test
-  public void getStableColor() {
+  public void getStableColor() throws LeanException {
 
     LeanPresentation presentation = new LeanPresentation();
     presentation.getThemes().add(LeanTheme.getDefault());
     presentation.setDefaultThemeName(Constants.DEFAULT_THEME_NAME);
 
-    PresentationRenderContext renderContext = new PresentationRenderContext(presentation);
+    PresentationRenderContext renderContext =
+        new PresentationRenderContext(presentation, new MemoryMetadataProvider());
 
     LeanColorRGB a1 = renderContext.getStableColor(Constants.DEFAULT_THEME_NAME, "A");
     LeanColorRGB a2 = renderContext.getStableColor(Constants.DEFAULT_THEME_NAME, "A");

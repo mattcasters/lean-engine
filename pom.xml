@@ -22,6 +22,7 @@
 
   <properties>
     <hop.version>2.3.0-SNAPSHOT</hop.version>
+    <jandex.version>3.0.5</jandex.version>
 
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
@@ -157,6 +158,12 @@
   </build>
 
   <dependencies>
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jandex</artifactId>
+      <version>${jandex.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.hop</groupId>
       <artifactId>hop-core</artifactId>
@@ -302,6 +309,18 @@
         </exclusion>
       </exclusions>
     </dependency>
+
+    <dependency>
+      <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-client</artifactId>
+      <version>3.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.connectors</groupId>
+      <artifactId>jersey-apache-connector</artifactId>
+      <version>3.1.0</version>
+    </dependency>
+
 
   </dependencies>
 

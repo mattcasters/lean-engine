@@ -1,5 +1,8 @@
 package org.lean.www.servlets;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.hop.core.logging.ILoggingObject;
 import org.apache.hop.metadata.api.IHopMetadataProvider;
 import org.lean.core.exception.LeanException;
@@ -7,10 +10,6 @@ import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.layout.LeanLayoutResults;
 import org.lean.render.IRenderContext;
 import org.lean.render.context.PresentationRenderContext;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 public class PresentationCache {
 
@@ -42,7 +41,7 @@ public class PresentationCache {
       return results;
     }
 
-    IRenderContext renderContext = new PresentationRenderContext(presentation);
+    IRenderContext renderContext = new PresentationRenderContext(presentation, metadataProvider);
     results =
         presentation.doLayout(parent, renderContext, metadataProvider, Collections.emptyList());
     presentation.render(results, metadataProvider);

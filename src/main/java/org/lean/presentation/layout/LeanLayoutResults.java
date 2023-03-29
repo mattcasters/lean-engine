@@ -20,6 +20,7 @@ import org.lean.core.LeanGeometry;
 import org.lean.core.draw.DrawnItem;
 import org.lean.core.exception.LeanException;
 import org.lean.presentation.component.LeanComponent;
+import org.lean.presentation.datacontext.IDataContext;
 import org.lean.presentation.page.LeanPage;
 
 /** Contains layout results of a presentation */
@@ -32,6 +33,8 @@ public class LeanLayoutResults {
   private List<LeanRenderPage> renderPages;
 
   private ILogChannel log;
+
+  private IDataContext dataContext;
 
   private String id;
 
@@ -69,10 +72,9 @@ public class LeanLayoutResults {
   }
 
   public LeanRenderPage addNewPage(LeanPage page, LeanRenderPage currentRenderPage) {
-
     int pageNumber;
     if (currentRenderPage == null) {
-      pageNumber = page.getFirstPageNumber();
+      pageNumber = 1;
     } else {
       pageNumber = currentRenderPage.getPageNumber() + 1;
     }
@@ -99,11 +101,13 @@ public class LeanLayoutResults {
 
   public LeanRenderPage getCurrentRenderPage(LeanPage page) {
     for (int i = renderPages.size() - 1; i >= 0; i--) {
+      LeanPage renderPage = renderPages.get(i).getPage();
+
       // The header & footer flag or the page number give us what we need.
       //
-      if (page.isHeader() && renderPages.get(i).getPage().isHeader()
-          || page.isFooter() && renderPages.get(i).getPage().isFooter()
-          || renderPages.get(i).getPage().getPageNumber() == page.getPageNumber()) {
+      if (page.isHeader() && renderPage.isHeader()
+          || page.isFooter() && renderPage.isFooter()
+          || renderPage.equals(page)) {
         return renderPages.get(i);
       }
     }
@@ -306,5 +310,23 @@ public class LeanLayoutResults {
    */
   public void setId(String id) {
     this.id = id;
+  }
+
+  /**
+   * Gets dataContext
+   *
+   * @return value of dataContext
+   */
+  public IDataContext getDataContext() {
+    return dataContext;
+  }
+
+  /**
+   * Sets dataContext
+   *
+   * @param dataContext value of dataContext
+   */
+  public void setDataContext(IDataContext dataContext) {
+    this.dataContext = dataContext;
   }
 }

@@ -1,25 +1,26 @@
 package org.lean.presentation.page;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.hop.metadata.api.HopMetadataBase;
-import org.apache.hop.metadata.api.HopMetadataProperty;
-import org.lean.core.exception.LeanException;
-import org.lean.presentation.component.LeanComponent;
-import org.lean.presentation.layout.LeanLayout;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
+import org.apache.hop.metadata.api.HopMetadataBase;
+import org.apache.hop.metadata.api.HopMetadataProperty;
+import org.lean.core.exception.LeanException;
+import org.lean.presentation.component.LeanComponent;
 
 /** This represents one page in a presentation. */
+@JsonIgnoreProperties(value = {"pageNumber"})
 public class LeanPage {
-
-  @HopMetadataProperty private int pageNumber;
+  /** An ID to uniquely identify a page while rendering. We don't serialize this. */
+  @JsonIgnore private final String id;
 
   @HopMetadataProperty private int width;
 
@@ -40,19 +41,13 @@ public class LeanPage {
   @HopMetadataProperty private boolean footer;
 
   public LeanPage() {
+    this.id = UUID.randomUUID().toString();
     this.components = new ArrayList<>();
   }
 
   public LeanPage(
-      int pageNumber,
-      int width,
-      int height,
-      int leftMargin,
-      int rightMargin,
-      int topMargin,
-      int bottomMargin) {
+      int width, int height, int leftMargin, int rightMargin, int topMargin, int bottomMargin) {
     this();
-    this.pageNumber = pageNumber;
     this.width = width;
     this.height = height;
     this.leftMargin = leftMargin;
@@ -68,7 +63,6 @@ public class LeanPage {
    */
   public LeanPage(LeanPage p) {
     this();
-    this.pageNumber = p.pageNumber;
     this.width = p.width;
     this.height = p.height;
     this.leftMargin = p.leftMargin;
@@ -82,13 +76,26 @@ public class LeanPage {
     }
   }
 
-  public static LeanPage getA4(int pageNumber, boolean portrait) {
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    LeanPage leanPage = (LeanPage) o;
+    return id.equals(leanPage.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
+  }
+
+  public static LeanPage getA4(boolean portrait) {
     int width = 794;
     int height = 1123;
     if (portrait) {
-      return new LeanPage(pageNumber, width, height, 25, 25, 25, 25);
+      return new LeanPage(width, height, 25, 25, 25, 25);
     } else {
-      return new LeanPage(pageNumber, height, width, 25, 25, 25, 25);
+      return new LeanPage(height, width, 25, 25, 25, 25);
     }
   }
 
@@ -99,43 +106,13 @@ public class LeanPage {
     int height = 1123 - 25 - 25;
     LeanPage page;
     if (portrait) {
-      page = new LeanPage(0, width, size, 0, 0, 0, 0);
+      page = new LeanPage(width, size, 0, 0, 0, 0);
     } else {
-      page = new LeanPage(0, height, size, 0, 0, 0, 0);
+      page = new LeanPage(height, size, 0, 0, 0, 0);
     }
     page.setHeader(header);
     page.setFooter(!header);
-    page.setPageNumber(page.getFirstPageNumber());
     return page;
-  }
-
-  @JsonIgnore
-  public int getFirstPageNumber() {
-    if (isHeader()) {
-      return -1;
-    }
-    if (isFooter()) {
-      return -2;
-    }
-    return 1;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof LeanPage)) {
-      return false;
-    }
-    if (o == this) {
-      return true;
-    }
-    LeanPage page = (LeanPage) o;
-
-    return page.getPageNumber() == pageNumber;
-  }
-
-  @Override
-  public int hashCode() {
-    return Integer.hashCode(pageNumber);
   }
 
   @JsonIgnore
@@ -169,7 +146,7 @@ public class LeanPage {
     // Create a map with the simple name to component relationships
     //
     Map<String, LeanComponent> componentsMap = new HashMap<>();
-    components.forEach( leanComponent -> componentsMap.put(leanComponent.getName(), leanComponent) );
+    components.forEach(leanComponent -> componentsMap.put(leanComponent.getName(), leanComponent));
 
     // Now create 2 lists: non-referenced components and the rest
     //
@@ -180,10 +157,10 @@ public class LeanPage {
     //
     Map<LeanComponent, Set<LeanComponent>> referencesMap = new HashMap<>();
     for (LeanComponent component : components) {
-      Set<LeanComponent> dependencies = component.getDependentComponents( componentsMap );
+      Set<LeanComponent> dependencies = component.getDependentComponents(componentsMap);
       referencesMap.put(component, dependencies);
       if (dependencies.isEmpty()) {
-        nonReferenced.add( component );
+        nonReferenced.add(component);
       } else {
         referenced.add(component);
       }
@@ -191,17 +168,17 @@ public class LeanPage {
 
     // Simply sort the non-referenced components by name...
     //
-    Collections.sort( nonReferenced, Comparator.comparing( HopMetadataBase::getName ) );
+    Collections.sort(nonReferenced, Comparator.comparing(HopMetadataBase::getName));
 
     // Do a cocktail sort, a safe way to sort a directed graph...
     //
-    for (int i=0;i<referenced.size();i++) {
-      for (int j=0;j<referenced.size()-1;j++) {
+    for (int i = 0; i < referenced.size(); i++) {
+      for (int j = 0; j < referenced.size() - 1; j++) {
         LeanComponent a = referenced.get(j);
-        LeanComponent b = referenced.get(j+1);
-        if (!a.equals( b )) {
-          if (!referencesMap.get( b ).contains( a )) {
-            referenced.set(j+1, a);
+        LeanComponent b = referenced.get(j + 1);
+        if (!a.equals(b)) {
+          if (!referencesMap.get(b).contains(a)) {
+            referenced.set(j + 1, a);
             referenced.set(j, b);
           }
         }
@@ -210,32 +187,22 @@ public class LeanPage {
 
     // Add the 2 lists...
     //
-    nonReferenced.addAll( referenced );
+    nonReferenced.addAll(referenced);
     return nonReferenced;
   }
 
-  /** @return the components */
+  /**
+   * @return the components
+   */
   public List<LeanComponent> getComponents() {
     return components;
   }
 
-  /** @param components the components to set */
+  /**
+   * @param components the components to set
+   */
   public void setComponents(List<LeanComponent> components) {
     this.components = components;
-  }
-
-  /**
-   * Gets pageNumber
-   *
-   * @return value of pageNumber
-   */
-  public int getPageNumber() {
-    return pageNumber;
-  }
-
-  /** @param pageNumber The pageNumber to set */
-  public void setPageNumber(int pageNumber) {
-    this.pageNumber = pageNumber;
   }
 
   /**
@@ -247,7 +214,9 @@ public class LeanPage {
     return width;
   }
 
-  /** @param width The width to set */
+  /**
+   * @param width The width to set
+   */
   public void setWidth(int width) {
     this.width = width;
   }
@@ -261,7 +230,9 @@ public class LeanPage {
     return height;
   }
 
-  /** @param height The height to set */
+  /**
+   * @param height The height to set
+   */
   public void setHeight(int height) {
     this.height = height;
   }
@@ -275,7 +246,9 @@ public class LeanPage {
     return leftMargin;
   }
 
-  /** @param leftMargin The leftMargin to set */
+  /**
+   * @param leftMargin The leftMargin to set
+   */
   public void setLeftMargin(int leftMargin) {
     this.leftMargin = leftMargin;
   }
@@ -289,7 +262,9 @@ public class LeanPage {
     return rightMargin;
   }
 
-  /** @param rightMargin The rightMargin to set */
+  /**
+   * @param rightMargin The rightMargin to set
+   */
   public void setRightMargin(int rightMargin) {
     this.rightMargin = rightMargin;
   }
@@ -303,7 +278,9 @@ public class LeanPage {
     return topMargin;
   }
 
-  /** @param topMargin The topMargin to set */
+  /**
+   * @param topMargin The topMargin to set
+   */
   public void setTopMargin(int topMargin) {
     this.topMargin = topMargin;
   }
@@ -317,7 +294,9 @@ public class LeanPage {
     return bottomMargin;
   }
 
-  /** @param bottomMargin The bottomMargin to set */
+  /**
+   * @param bottomMargin The bottomMargin to set
+   */
   public void setBottomMargin(int bottomMargin) {
     this.bottomMargin = bottomMargin;
   }
@@ -331,7 +310,9 @@ public class LeanPage {
     return header;
   }
 
-  /** @param header The header to set */
+  /**
+   * @param header The header to set
+   */
   public void setHeader(boolean header) {
     this.header = header;
   }
@@ -345,7 +326,9 @@ public class LeanPage {
     return footer;
   }
 
-  /** @param footer The footer to set */
+  /**
+   * @param footer The footer to set
+   */
   public void setFooter(boolean footer) {
     this.footer = footer;
   }

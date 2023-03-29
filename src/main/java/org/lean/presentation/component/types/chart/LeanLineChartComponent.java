@@ -1,6 +1,12 @@
 package org.lean.presentation.component.types.chart;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.awt.BasicStroke;
+import java.awt.Stroke;
+import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
@@ -23,12 +29,6 @@ import org.lean.presentation.component.type.LeanComponentPlugin;
 import org.lean.presentation.layout.LeanLayoutResults;
 import org.lean.presentation.theme.LeanTheme;
 import org.lean.render.IRenderContext;
-
-import java.awt.*;
-import java.awt.geom.Path2D;
-import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.List;
 
 @JsonDeserialize(as = LeanLineChartComponent.class)
 @LeanComponentPlugin(
@@ -229,6 +229,7 @@ public class LeanLineChartComponent extends LeanBaseChartComponent implements IL
     // Keep the location for the label...
     //
     Point2D.Double labelPoint = null;
+    int horizontalLabelsDrawn = 1;
 
     for (int series = 0; series < verticalCombinations.size(); series++) {
       List<String> verticalCombination = verticalCombinations.get(series);
@@ -256,25 +257,29 @@ public class LeanLineChartComponent extends LeanBaseChartComponent implements IL
           double labelY = bottomLeftY + verticalMargin + geometry.getOffsetY();
 
           if (showingHorizontalLabels) {
-            enableColor(gc, lookupDefaultColor(renderContext));
-            enableFont(gc, lookupHorizontalDimensionsFont(renderContext));
-            gc.drawString(label, (int) labelX, (int) labelY);
+            if (actualHorizontalLabelInterval <= 0
+                || (horizontalLabelsDrawn % actualHorizontalLabelInterval == 0)) {
+              enableColor(gc, lookupDefaultColor(renderContext));
+              enableFont(gc, lookupHorizontalDimensionsFont(renderContext));
+              gc.drawString(label, (int) labelX, (int) labelY);
 
-            drawnItems.add(
-                new DrawnItem(
-                    component.getName(),
-                    component.getComponent().getPluginId(),
-                    layoutResult.getPartNumber(),
-                    DrawnItem.DrawnItemType.ComponentItem,
-                    DrawnItem.Category.XAxisLabel.name(),
-                    0,
-                    0,
-                    new LeanGeometry(
-                        (int) (offSet.getX() + labelX),
-                        (int) (offSet.getY() + labelY - geometry.getHeight()),
-                        geometry.getWidth(),
-                        geometry.getHeight()),
-                    new DrawnContext(label)));
+              drawnItems.add(
+                  new DrawnItem(
+                      component.getName(),
+                      component.getComponent().getPluginId(),
+                      layoutResult.getPartNumber(),
+                      DrawnItem.DrawnItemType.ComponentItem,
+                      DrawnItem.Category.XAxisLabel.name(),
+                      0,
+                      0,
+                      new LeanGeometry(
+                          (int) (offSet.getX() + labelX),
+                          (int) (offSet.getY() + labelY - geometry.getHeight()),
+                          geometry.getWidth(),
+                          geometry.getHeight()),
+                      new DrawnContext(label)));
+            }
+            horizontalLabelsDrawn++;
           }
 
           // Draw a small tick at the end of the part
@@ -289,7 +294,7 @@ public class LeanLineChartComponent extends LeanBaseChartComponent implements IL
 
         // Draw the fact series...
         //
-        List<String> factLabels = details.factLabels.get(series);
+        // List<String> factLabels = details.factLabels.get(series);
         List<Object> factValues = details.factValues.get(series);
         List<IValueMeta> factValueMetas = details.factValueMetas.get(series);
 
@@ -452,7 +457,9 @@ public class LeanLineChartComponent extends LeanBaseChartComponent implements IL
     return drawingCurvedTrendLine;
   }
 
-  /** @param drawingCurvedTrendLine The drawingCurvedTrendLine to set */
+  /**
+   * @param drawingCurvedTrendLine The drawingCurvedTrendLine to set
+   */
   public void setDrawingCurvedTrendLine(boolean drawingCurvedTrendLine) {
     this.drawingCurvedTrendLine = drawingCurvedTrendLine;
   }

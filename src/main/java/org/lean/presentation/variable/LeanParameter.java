@@ -1,5 +1,6 @@
 package org.lean.presentation.variable;
 
+import java.util.Objects;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 
 /**
@@ -33,6 +34,32 @@ public class LeanParameter {
     this.parameterValue = v.parameterValue;
   }
 
+  @Override
+  public String toString() {
+    return "LeanParameter{"
+        + "parameterName='"
+        + parameterName
+        + '\''
+        + ", parameterValue='"
+        + parameterValue
+        + '\''
+        + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    LeanParameter parameter = (LeanParameter) o;
+    return Objects.equals(parameterName, parameter.parameterName)
+        && Objects.equals(parameterValue, parameter.parameterValue);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(parameterName, parameterValue);
+  }
+
   /**
    * Gets parameterName
    *
@@ -42,7 +69,9 @@ public class LeanParameter {
     return parameterName;
   }
 
-  /** @param parameterName The parameterName to set */
+  /**
+   * @param parameterName The parameterName to set
+   */
   public void setParameterName(String parameterName) {
     this.parameterName = parameterName;
   }
@@ -56,7 +85,9 @@ public class LeanParameter {
     return parameterValue;
   }
 
-  /** @param parameterValue The parameterValue to set */
+  /**
+   * @param parameterValue The parameterValue to set
+   */
   public void setParameterValue(String parameterValue) {
     this.parameterValue = parameterValue;
   }

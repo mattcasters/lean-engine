@@ -358,7 +358,7 @@ public abstract class LeanBaseComponent implements ILeanComponent {
             "Unable to find the geometry of component "
                 + componentName
                 + " on page "
-                + page.getPageNumber());
+                + presentation.getPages().indexOf(page));
       }
       return geometry;
     }
@@ -547,7 +547,10 @@ public abstract class LeanBaseComponent implements ILeanComponent {
       if (actualBackgroundColor != null) {
         Color oldColor = gc.getColor();
         Color bg =
-            new Color(backGroundColor.getR(), backGroundColor.getG(), backGroundColor.getB());
+            new Color(
+                actualBackgroundColor.getR(),
+                actualBackgroundColor.getG(),
+                actualBackgroundColor.getB());
         gc.setColor(bg);
         gc.fillRect(
             componentGeometry.getX(),

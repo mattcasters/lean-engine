@@ -1,6 +1,8 @@
 package org.lean.presentation.component.types.chart;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hop.core.Const;
@@ -24,9 +26,6 @@ import org.lean.presentation.layout.LeanLayoutResults;
 import org.lean.presentation.page.LeanPage;
 import org.lean.render.IRenderContext;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponent
     implements ILeanComponent {
 
@@ -40,11 +39,13 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
   @HopMetadataProperty protected String lineWidth;
   @HopMetadataProperty protected boolean usingZeroBaseline;
   @HopMetadataProperty protected boolean showingLegend;
+  @HopMetadataProperty protected String horizontalLabelInterval;
 
   // Calculated at runtime
   //
   @JsonIgnore protected transient String titleText;
   @JsonIgnore protected transient boolean usingTotalHeights;
+  @JsonIgnore protected transient int actualHorizontalLabelInterval;
 
   public LeanBaseChartComponent(String pluginId, String connectorName) {
     super(pluginId);
@@ -107,6 +108,8 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
     // Calculate the title based on data context
     //
     titleText = dataContext.getVariables().resolve(title);
+    actualHorizontalLabelInterval =
+        Const.toInt(dataContext.getVariables().resolve(horizontalLabelInterval), 0);
   }
 
   protected void validateSettings() throws LeanException {
@@ -155,9 +158,9 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
       IRenderContext renderContext,
       LeanLayoutResults results) {
 
-      // Calculated using the layout provided
-      //
-      return null;
+    // Calculated using the layout provided
+    //
+    return null;
   }
 
   protected String getCombinationString(List<String> combinationList) {
@@ -429,7 +432,9 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
     return horizontalMargin;
   }
 
-  /** @param horizontalMargin The horizontalMargin to set */
+  /**
+   * @param horizontalMargin The horizontalMargin to set
+   */
   public void setHorizontalMargin(int horizontalMargin) {
     this.horizontalMargin = horizontalMargin;
   }
@@ -443,7 +448,9 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
     return verticalMargin;
   }
 
-  /** @param verticalMargin The verticalMargin to set */
+  /**
+   * @param verticalMargin The verticalMargin to set
+   */
   public void setVerticalMargin(int verticalMargin) {
     this.verticalMargin = verticalMargin;
   }
@@ -457,7 +464,9 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
     return showingHorizontalLabels;
   }
 
-  /** @param showingHorizontalLabels The showingHorizontalLabels to set */
+  /**
+   * @param showingHorizontalLabels The showingHorizontalLabels to set
+   */
   public void setShowingHorizontalLabels(boolean showingHorizontalLabels) {
     this.showingHorizontalLabels = showingHorizontalLabels;
   }
@@ -471,7 +480,9 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
     return showingVerticalLabels;
   }
 
-  /** @param showingVerticalLabels The showingVerticalLabels to set */
+  /**
+   * @param showingVerticalLabels The showingVerticalLabels to set
+   */
   public void setShowingVerticalLabels(boolean showingVerticalLabels) {
     this.showingVerticalLabels = showingVerticalLabels;
   }
@@ -485,7 +496,9 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
     return showingAxisTicks;
   }
 
-  /** @param showingAxisTicks The showingAxisTicks to set */
+  /**
+   * @param showingAxisTicks The showingAxisTicks to set
+   */
   public void setShowingAxisTicks(boolean showingAxisTicks) {
     this.showingAxisTicks = showingAxisTicks;
   }
@@ -499,7 +512,9 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
     return dotSize;
   }
 
-  /** @param dotSize The dotSize to set */
+  /**
+   * @param dotSize The dotSize to set
+   */
   public void setDotSize(int dotSize) {
     this.dotSize = dotSize;
   }
@@ -513,7 +528,9 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
     return title;
   }
 
-  /** @param title The title to set */
+  /**
+   * @param title The title to set
+   */
   public void setTitle(String title) {
     this.title = title;
   }
@@ -527,7 +544,9 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
     return lineWidth;
   }
 
-  /** @param lineWidth The lineWidth to set */
+  /**
+   * @param lineWidth The lineWidth to set
+   */
   public void setLineWidth(String lineWidth) {
     this.lineWidth = lineWidth;
   }
@@ -541,7 +560,9 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
     return usingZeroBaseline;
   }
 
-  /** @param usingZeroBaseline The usingZeroBaseline to set */
+  /**
+   * @param usingZeroBaseline The usingZeroBaseline to set
+   */
   public void setUsingZeroBaseline(boolean usingZeroBaseline) {
     this.usingZeroBaseline = usingZeroBaseline;
   }
@@ -555,8 +576,28 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
     return showingLegend;
   }
 
-  /** @param showingLegend The showingLegend to set */
+  /**
+   * @param showingLegend The showingLegend to set
+   */
   public void setShowingLegend(boolean showingLegend) {
     this.showingLegend = showingLegend;
+  }
+
+  /**
+   * Gets horizontalLabelInterval
+   *
+   * @return value of horizontalLabelInterval
+   */
+  public String getHorizontalLabelInterval() {
+    return horizontalLabelInterval;
+  }
+
+  /**
+   * Sets horizontalLabelInterval
+   *
+   * @param horizontalLabelInterval value of horizontalLabelInterval
+   */
+  public void setHorizontalLabelInterval(String horizontalLabelInterval) {
+    this.horizontalLabelInterval = horizontalLabelInterval;
   }
 }
