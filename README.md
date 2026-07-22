@@ -43,7 +43,16 @@ mvn clean install
 4. **Render** — draw to SVG (Batik / Hop SVG); optional PDF via FOP/PDFBox.
 5. **Plugins** — components and connectors discovered via Jandex + Hop `PluginRegistry`.
 
-See the planned `docs/` set for components, connectors, and API details (in progress).
+### Documentation
+
+| Doc | Description |
+|-----|-------------|
+| [docs/architecture.md](docs/architecture.md) | Server-side SVG model and layout pipeline |
+| [docs/connectors.md](docs/connectors.md) | Built-in connectors and streaming contract |
+| [docs/components.md](docs/components.md) | Built-in visual components |
+| [docs/api.md](docs/api.md) | Library API and embedding |
+| [docs/ecosystem.md](docs/ecosystem.md) | Related repositories |
+| [docs/review/](docs/review/) | Code review notes |
 
 ## Ecosystem
 

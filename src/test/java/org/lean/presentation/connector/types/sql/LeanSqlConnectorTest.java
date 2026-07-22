@@ -1,11 +1,17 @@
 package org.lean.presentation.connector.types.sql;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.hop.core.variables.IVariables;
 import org.apache.hop.core.variables.Variables;
 import org.apache.hop.metadata.api.IHopMetadataProvider;
 import org.apache.hop.metadata.api.IHopMetadataSerializer;
 import org.apache.hop.metadata.serializer.memory.MemoryMetadataProvider;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.lean.core.LeanDatabaseConnection;
 import org.lean.core.LeanEnvironment;
 import org.lean.core.exception.LeanException;
@@ -14,46 +20,31 @@ import org.lean.presentation.datacontext.IDataContext;
 import org.lean.util.BasePresentationUtil;
 import org.lean.util.TablePresentationUtil;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+class LeanSqlConnectorTest {
 
-public class LeanSqlConnectorTest extends TestCase {
+  private static final int ROW_COUNT = 50;
+  private static final String TABLE_NAME = "SQL_TEST_TABLE";
 
-  private static int rowCount = 50;
-  private static String tableName = "SQL_TEST_TABLE";
   private IHopMetadataProvider metadataProvider;
   private IVariables variables;
   private LeanDatabaseConnection connection;
 
-  @Override
-  protected void setUp() throws Exception {
-
+  @BeforeEach
+  void setUp() throws Exception {
     metadataProvider = new MemoryMetadataProvider();
     variables = Variables.getADefaultVariableSpace();
     LeanEnvironment.init();
-
-    // Add the database plugins from the test classpath
-    //
     BasePresentationUtil.registerTestPlugins();
 
     IHopMetadataSerializer<LeanDatabaseConnection> dbSerializer =
         metadataProvider.getSerializer(LeanDatabaseConnection.class);
-
-    // Create a table and put a bunch of rows in it...
-    //
-    connection = TablePresentationUtil.populateTestTable(variables, tableName, rowCount);
+    connection = TablePresentationUtil.populateTestTable(variables, TABLE_NAME, ROW_COUNT);
     dbSerializer.save(connection);
   }
 
-  @Override
-  protected void tearDown() throws Exception {}
-
-  public void testStartStreaming() throws Exception {
-
-    // Now we can reference the connection in the connector
-    //
-    String sql = "SELECT * FROM " + tableName;
-
+  @Test
+  void streamsAllRowsFromSqlQuery() throws Exception {
+    String sql = "SELECT * FROM " + TABLE_NAME;
     final LeanSqlConnector leanSqlConnector = new LeanSqlConnector(connection.getName(), sql);
 
     AtomicInteger rowCounter = new AtomicInteger(0);
@@ -91,6 +82,6 @@ public class LeanSqlConnectorTest extends TestCase {
     leanSqlConnector.waitUntilFinished();
 
     assertTrue(endReceived.get());
-    assertEquals(rowCount, rowCounter.get());
+    assertEquals(ROW_COUNT, rowCounter.get());
   }
 }
