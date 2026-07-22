@@ -16,12 +16,16 @@ import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
 import org.lean.presentation.connector.type.LeanConnectorPlugin;
 import org.lean.presentation.datacontext.IDataContext;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonDeserialize(as = LeanMetadataElementsConnector.class)
 @LeanConnectorPlugin(
     id = "MetadataElementsConnector",
     name = "Metadata elements",
     description = "Lists the available metadata elements")
+@Getter
+@Setter
 public class LeanMetadataElementsConnector extends LeanBaseConnector implements ILeanConnector {
 
   @HopMetadataProperty private String elementKey;
@@ -91,23 +95,5 @@ public class LeanMetadataElementsConnector extends LeanBaseConnector implements 
   @Override
   public void waitUntilFinished() throws LeanException {
     // StartStreaming works synchronized, no need to get complicated about it
-  }
-
-  /**
-   * Gets elementKey
-   *
-   * @return value of elementKey
-   */
-  public String getElementKey() {
-    return elementKey;
-  }
-
-  /**
-   * Sets elementKey
-   *
-   * @param elementKey value of elementKey
-   */
-  public void setElementKey(String elementKey) {
-    this.elementKey = elementKey;
   }
 }

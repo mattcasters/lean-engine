@@ -1,10 +1,13 @@
 package org.lean.core;
 
-import org.apache.hop.metadata.api.HopMetadataProperty;
-
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.hop.metadata.api.HopMetadataProperty;
 
+@Getter
+@Setter
 public class LeanSortMethod {
 
   @HopMetadataProperty private Type type;
@@ -33,51 +36,7 @@ public class LeanSortMethod {
     this();
     this.type = m.type;
     this.ascending = m.ascending;
-    for (String s : m.customOrder) {
-      this.customOrder.add(s);
-    }
-  }
-
-  /**
-   * Gets type
-   *
-   * @return value of type
-   */
-  public Type getType() {
-    return type;
-  }
-
-  /** @param type The type to set */
-  public void setType(Type type) {
-    this.type = type;
-  }
-
-  /**
-   * Gets ascending
-   *
-   * @return value of ascending
-   */
-  public boolean isAscending() {
-    return ascending;
-  }
-
-  /** @param ascending The ascending to set */
-  public void setAscending(boolean ascending) {
-    this.ascending = ascending;
-  }
-
-  /**
-   * Gets customOrder
-   *
-   * @return value of customOrder
-   */
-  public List<String> getCustomOrder() {
-    return customOrder;
-  }
-
-  /** @param customOrder The customOrder to set */
-  public void setCustomOrder(List<String> customOrder) {
-    this.customOrder = customOrder;
+    this.customOrder.addAll(m.customOrder);
   }
 
   public enum Type {
@@ -85,6 +44,6 @@ public class LeanSortMethod {
     STRING_ALPHA,
     STRING_ALPHA_CASE_INSENSITIVE,
     STRING_NUMERIC,
-    STRING_CUSTOM;
+    STRING_CUSTOM
   }
 }

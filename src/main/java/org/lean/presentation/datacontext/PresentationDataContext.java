@@ -10,8 +10,12 @@ import org.lean.core.Constants;
 import org.lean.core.exception.LeanException;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.connector.LeanConnector;
+import lombok.Getter;
+import lombok.Setter;
 
 /** A data context with variables */
+@Getter
+@Setter
 public class PresentationDataContext implements IDataContext {
 
   private LeanPresentation presentation;
@@ -53,54 +57,5 @@ public class PresentationDataContext implements IDataContext {
       connector = new LeanConnector(connector);
     }
     return connector;
-  }
-
-  /**
-   * Gets presentation
-   *
-   * @return value of presentation
-   */
-  public LeanPresentation getPresentation() {
-    return presentation;
-  }
-
-  /**
-   * @param presentation The presentation to set
-   */
-  public void setPresentation(LeanPresentation presentation) {
-    this.presentation = presentation;
-  }
-
-  /**
-   * Gets variableSpace
-   *
-   * @return value of variables
-   */
-  @Override
-  public IVariables getVariables() {
-    return variables;
-  }
-
-  /**
-   * @param variables The variables to set
-   */
-  public void setVariables(IVariables variables) {
-    this.variables = variables;
-  }
-
-  /**
-   * Gets metadataProvider
-   *
-   * @return value of metadataProvider
-   */
-  public IHopMetadataProvider getMetadataProvider() {
-    return metadataProvider;
-  }
-
-  /**
-   * @param metadataProvider The metadataProvider to set
-   */
-  public void setMetadataProvider(IHopMetadataProvider metadataProvider) {
-    this.metadataProvider = metadataProvider;
   }
 }

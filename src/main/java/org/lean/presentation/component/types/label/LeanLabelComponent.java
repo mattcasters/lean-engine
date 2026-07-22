@@ -28,12 +28,16 @@ import org.lean.render.IRenderContext;
 
 import java.awt.font.TextAttribute;
 import java.text.AttributedString;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonDeserialize(as = LeanLabelComponent.class)
 @LeanComponentPlugin(
     id = "LeanLabelComponent",
     name = "Label",
     description = "A Label to decorate your presentations")
+@Getter
+@Setter
 public class LeanLabelComponent extends LeanBaseComponent implements ILeanComponent {
 
   public static final String DATA_TEXT_GEOMETRY = "Text Geometry";
@@ -224,65 +228,5 @@ public class LeanLabelComponent extends LeanBaseComponent implements ILeanCompon
                 0,
                 labelGeometry,
                 new DrawnContext(text)));
-  }
-
-  /** @return the label */
-  public String getLabel() {
-    return label;
-  }
-
-  /** @param label the label to set */
-  public void setLabel(String label) {
-    this.label = label;
-  }
-
-  /** @return the horizontalAlignment */
-  public LeanHorizontalAlignment getHorizontalAlignment() {
-    return horizontalAlignment;
-  }
-
-  /** @param horizontalAlignment the horizontalAlignment to set */
-  public void setHorizontalAlignment(LeanHorizontalAlignment horizontalAlignment) {
-    this.horizontalAlignment = horizontalAlignment;
-  }
-
-  /** @return the verticalAlignment */
-  public LeanVerticalAlignment getVerticalAlignment() {
-    return verticalAlignment;
-  }
-
-  /** @param verticalAlignment the verticalAlignment to set */
-  public void setVerticalAlignment(LeanVerticalAlignment verticalAlignment) {
-    this.verticalAlignment = verticalAlignment;
-  }
-
-  /**
-   * Gets customHtml
-   *
-   * @return value of customHtml
-   */
-  public String getCustomHtml() {
-    return customHtml;
-  }
-
-  /** @param customHtml The customHtml to set */
-  public void setCustomHtml(String customHtml) {
-    this.customHtml = customHtml;
-  }
-
-  /**
-   * Gets underline
-   *
-   * @return value of underline
-   */
-  public boolean isUnderline() {
-    return underline;
-  }
-
-  /**
-   * @param underline The underline to set
-   */
-  public void setUnderline( boolean underline ) {
-    this.underline = underline;
   }
 }

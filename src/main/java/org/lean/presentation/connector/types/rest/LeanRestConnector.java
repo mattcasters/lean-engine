@@ -30,6 +30,8 @@ import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
 import org.lean.presentation.connector.type.LeanConnectorPlugin;
 import org.lean.presentation.datacontext.IDataContext;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Retrieves JSON from an HTTP endpoint and maps array elements to rows.
@@ -42,6 +44,8 @@ import org.lean.presentation.datacontext.IDataContext;
     id = "LeanRestConnector",
     name = "REST",
     description = "This connector retrieves and parses JSON data from a REST service")
+@Getter
+@Setter
 public class LeanRestConnector extends LeanBaseConnector implements ILeanConnector {
 
   private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(30);
@@ -216,46 +220,9 @@ public class LeanRestConnector extends LeanBaseConnector implements ILeanConnect
     // Synchronous connector — nothing to wait for.
   }
 
-  public String getUrl() {
-    return url;
-  }
 
-  public void setUrl(String url) {
-    this.url = url;
-  }
-
-  public String getPath() {
-    return path;
-  }
-
-  public void setPath(String path) {
-    this.path = path;
-  }
-
-  public String getRowsElement() {
-    return rowsElement;
-  }
-
-  public void setRowsElement(String rowsElement) {
-    this.rowsElement = rowsElement;
-  }
-
-  public List<JsonField> getFields() {
-    return fields;
-  }
-
-  public void setFields(List<JsonField> fields) {
-    this.fields = fields;
-  }
-
-  public String getBody() {
-    return body;
-  }
-
-  public void setBody(String body) {
-    this.body = body;
-  }
-
+  @Getter
+  @Setter
   public static final class JsonField {
     @HopMetadataProperty private String tag;
     @HopMetadataProperty private String name;
@@ -297,68 +264,6 @@ public class LeanRestConnector extends LeanBaseConnector implements ILeanConnect
       return valueMeta;
     }
 
-    public String getTag() {
-      return tag;
-    }
 
-    public void setTag(String tag) {
-      this.tag = tag;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public void setName(String name) {
-      this.name = name;
-    }
-
-    public String getType() {
-      return type;
-    }
-
-    public void setType(String type) {
-      this.type = type;
-    }
-
-    public String getFormatMask() {
-      return formatMask;
-    }
-
-    public void setFormatMask(String formatMask) {
-      this.formatMask = formatMask;
-    }
-
-    public String getLength() {
-      return length;
-    }
-
-    public void setLength(String length) {
-      this.length = length;
-    }
-
-    public String getPrecision() {
-      return precision;
-    }
-
-    public void setPrecision(String precision) {
-      this.precision = precision;
-    }
-
-    public String getDecimal() {
-      return decimal;
-    }
-
-    public void setDecimal(String decimal) {
-      this.decimal = decimal;
-    }
-
-    public String getGrouping() {
-      return grouping;
-    }
-
-    public void setGrouping(String grouping) {
-      this.grouping = grouping;
-    }
   }
 }

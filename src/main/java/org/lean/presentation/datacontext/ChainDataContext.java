@@ -7,7 +7,11 @@ import org.lean.presentation.connector.LeanConnector;
 
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class ChainDataContext implements IDataContext {
 
   private IDataContext parentDataContext;
@@ -47,47 +51,6 @@ public class ChainDataContext implements IDataContext {
     connectorsMap.put(leanConnector.getName(), leanConnector);
   }
 
-  /**
-   * Gets parentDataContext
-   *
-   * @return value of parentDataContext
-   */
-  public IDataContext getParentDataContext() {
-    return parentDataContext;
-  }
-
-  /** @param parentDataContext The parentDataContext to set */
-  public void setParentDataContext(IDataContext parentDataContext) {
-    this.parentDataContext = parentDataContext;
-  }
-
-  /**
-   * Gets connectorsMap
-   *
-   * @return value of connectorsMap
-   */
-  public Map<String, LeanConnector> getConnectorsMap() {
-    return connectorsMap;
-  }
-
-  /** @param connectorsMap The connectorsMap to set */
-  public void setConnectorsMap(Map<String, LeanConnector> connectorsMap) {
-    this.connectorsMap = connectorsMap;
-  }
-
-  /**
-   * Gets lastConnector
-   *
-   * @return value of lastConnector
-   */
-  public LeanConnector getLastConnector() {
-    return lastConnector;
-  }
-
-  /** @param lastConnector The lastConnector to set */
-  public void setLastConnector(LeanConnector lastConnector) {
-    this.lastConnector = lastConnector;
-  }
 
   @Override
   public IHopMetadataProvider getMetadataProvider() {

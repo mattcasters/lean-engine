@@ -1,11 +1,16 @@
 package org.lean.core.draw;
 
-import org.lean.core.LeanColumn;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import org.lean.core.LeanColumn;
 
+@Getter
+@Setter
+@ToString
 public class DrawnContext {
 
   private List<LeanColumn> dimensions;
@@ -28,38 +33,5 @@ public class DrawnContext {
   public DrawnContext(String value, LeanColumn... dimensions) {
     this(value);
     this.dimensions.addAll(Arrays.asList(dimensions));
-  }
-
-  @Override
-  public String toString() {
-    return "DrawnContext{" + "dimensions=" + dimensions + ", value='" + value + '\'' + '}';
-  }
-
-  /**
-   * Gets dimensions
-   *
-   * @return value of dimensions
-   */
-  public List<LeanColumn> getDimensions() {
-    return dimensions;
-  }
-
-  /** @param dimensions The dimensions to set */
-  public void setDimensions(List<LeanColumn> dimensions) {
-    this.dimensions = dimensions;
-  }
-
-  /**
-   * Gets value
-   *
-   * @return value of value
-   */
-  public String getValue() {
-    return value;
-  }
-
-  /** @param value The value to set */
-  public void setValue(String value) {
-    this.value = value;
   }
 }

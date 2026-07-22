@@ -21,6 +21,8 @@ import org.lean.render.IRenderContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * This is a composite component which groups a bunch of composites The size is the maximum reach of
@@ -52,6 +54,8 @@ import java.util.List;
     id = "LeanCompositeComponent",
     name = "Composite",
     description = "In this component you can place other components")
+@Getter
+@Setter
 public class LeanCompositeComponent extends LeanBaseComponent implements ILeanComponent {
 
   public static final String DATA_COMPOSITE_DETAILS = "DATA_COMPOSITE_DETAILS";
@@ -344,19 +348,5 @@ public class LeanCompositeComponent extends LeanBaseComponent implements ILeanCo
 
       childIComponent.render(childComponentLayoutResult, results, renderContext, offSet);
     }
-  }
-
-  /**
-   * Gets children
-   *
-   * @return value of children
-   */
-  public List<LeanComponent> getChildren() {
-    return children;
-  }
-
-  /** @param children The children to set */
-  public void setChildren(List<LeanComponent> children) {
-    this.children = children;
   }
 }

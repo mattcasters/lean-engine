@@ -10,7 +10,11 @@ import org.lean.presentation.datacontext.IDataContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public abstract class LeanBaseConnector implements ILeanConnector {
 
   @HopMetadataProperty @JsonProperty protected String pluginId;
@@ -112,47 +116,5 @@ public abstract class LeanBaseConnector implements ILeanConnector {
   @Override
   public void removeDataListener(ILeanRowListener rowListener) {
     rowListeners.remove(rowListener);
-  }
-
-  /**
-   * Gets pluginId
-   *
-   * @return value of pluginId
-   */
-  public String getPluginId() {
-    return pluginId;
-  }
-
-  /** @param pluginId The pluginId to set */
-  public void setPluginId(String pluginId) {
-    this.pluginId = pluginId;
-  }
-
-  /**
-   * Gets sourceConnectorName
-   *
-   * @return value of sourceConnectorName
-   */
-  public String getSourceConnectorName() {
-    return sourceConnectorName;
-  }
-
-  /** @param sourceConnectorName The sourceConnectorName to set */
-  public void setSourceConnectorName(String sourceConnectorName) {
-    this.sourceConnectorName = sourceConnectorName;
-  }
-
-  /**
-   * Gets rowListeners
-   *
-   * @return value of rowListeners
-   */
-  public List<ILeanRowListener> getRowListeners() {
-    return rowListeners;
-  }
-
-  /** @param rowListeners The rowListeners to set */
-  public void setRowListeners(List<ILeanRowListener> rowListeners) {
-    this.rowListeners = rowListeners;
   }
 }

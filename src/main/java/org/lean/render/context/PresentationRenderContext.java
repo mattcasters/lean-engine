@@ -5,7 +5,11 @@ import org.lean.core.exception.LeanException;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.theme.LeanTheme;
 import org.lean.render.IRenderContext;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class PresentationRenderContext extends SimpleRenderContext implements IRenderContext {
 
   private LeanPresentation presentation;
@@ -38,21 +42,5 @@ public class PresentationRenderContext extends SimpleRenderContext implements IR
       return theme;
     }
     return super.lookupTheme(themeName);
-  }
-
-  /**
-   * Gets presentation
-   *
-   * @return value of presentation
-   */
-  public LeanPresentation getPresentation() {
-    return presentation;
-  }
-
-  /**
-   * @param presentation The presentation to set
-   */
-  public void setPresentation(LeanPresentation presentation) {
-    this.presentation = presentation;
   }
 }

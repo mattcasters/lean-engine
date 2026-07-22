@@ -1,7 +1,11 @@
 package org.lean.core;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 
+@Getter
+@Setter
 public class LeanColumn {
 
   @HopMetadataProperty private String columnName;
@@ -46,105 +50,5 @@ public class LeanColumn {
     this.headerValue = headerValue;
     this.horizontalAlignment = horizontalAlignment;
     this.verticalAlignment = verticalAlignment;
-  }
-
-  /**
-   * Gets columnName
-   *
-   * @return value of columnName
-   */
-  public String getColumnName() {
-    return columnName;
-  }
-
-  /** @param columnName The columnName to set */
-  public void setColumnName(String columnName) {
-    this.columnName = columnName;
-  }
-
-  /**
-   * Gets horizontalAlignment
-   *
-   * @return value of horizontalAlignment
-   */
-  public LeanHorizontalAlignment getHorizontalAlignment() {
-    return horizontalAlignment;
-  }
-
-  /** @param horizontalAlignment The horizontalAlignment to set */
-  public void setHorizontalAlignment(LeanHorizontalAlignment horizontalAlignment) {
-    this.horizontalAlignment = horizontalAlignment;
-  }
-
-  /**
-   * Gets verticalAlignment
-   *
-   * @return value of verticalAlignment
-   */
-  public LeanVerticalAlignment getVerticalAlignment() {
-    return verticalAlignment;
-  }
-
-  /** @param verticalAlignment The verticalAlignment to set */
-  public void setVerticalAlignment(LeanVerticalAlignment verticalAlignment) {
-    this.verticalAlignment = verticalAlignment;
-  }
-
-  /**
-   * Gets headerValue
-   *
-   * @return value of headerValue
-   */
-  public String getHeaderValue() {
-    return headerValue;
-  }
-
-  /** @param headerValue The headerValue to set */
-  public void setHeaderValue(String headerValue) {
-    this.headerValue = headerValue;
-  }
-
-  /**
-   * Gets width
-   *
-   * @return value of width
-   */
-  public int getWidth() {
-    return width;
-  }
-
-  /** @param width The width to set */
-  public void setWidth(int width) {
-    this.width = width;
-  }
-
-  /**
-   * Gets formatMask
-   *
-   * @return value of formatMask
-   */
-  public String getFormatMask() {
-    return formatMask;
-  }
-
-  /** @param formatMask The formatMask to set */
-  public void setFormatMask(String formatMask) {
-    this.formatMask = formatMask;
-  }
-
-  /**
-   * Gets font
-   *
-   * @return value of font
-   */
-  @Deprecated
-  public LeanFont getFont() {
-    return font;
-  }
-
-  /** @param font The font to set */
-  @Deprecated
-  public void setFont(LeanFont font) {
-    this.font = font;
   }
 }

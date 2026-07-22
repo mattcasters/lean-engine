@@ -10,7 +10,11 @@ import org.lean.core.LeanSize;
 import org.lean.core.exception.LeanException;
 import org.lean.presentation.theme.LeanTheme;
 import org.lean.render.IRenderContext;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class SimpleRenderContext implements IRenderContext {
   private final IHopMetadataProvider metadataProvider;
 
@@ -115,46 +119,5 @@ public class SimpleRenderContext implements IRenderContext {
     valueColorMap.put(value, colorIndex);
 
     return color;
-  }
-
-  /**
-   * Gets canvasSize
-   *
-   * @return value of canvasSize
-   */
-  public LeanSize getCanvasSize() {
-    return canvasSize;
-  }
-
-  /**
-   * @param canvasSize The canvasSize to set
-   */
-  public void setCanvasSize(LeanSize canvasSize) {
-    this.canvasSize = canvasSize;
-  }
-
-  /**
-   * Gets themes
-   *
-   * @return value of themes
-   */
-  public List<LeanTheme> getThemes() {
-    return themes;
-  }
-
-  /**
-   * @param themes The themes to set
-   */
-  public void setThemes(List<LeanTheme> themes) {
-    this.themes = themes;
-  }
-
-  /**
-   * Gets metadataProvider
-   *
-   * @return value of metadataProvider
-   */
-  public IHopMetadataProvider getMetadataProvider() {
-    return metadataProvider;
   }
 }

@@ -16,8 +16,12 @@ import org.lean.presentation.connector.types.filter.SimpleFilterValue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 /** A data context for a group. This means we're automatically setting variables to use in labels */
+@Getter
+@Setter
 public class GroupDataContext implements IDataContext {
 
   private final IDataContext parentDataContext;
@@ -121,10 +125,6 @@ public class GroupDataContext implements IDataContext {
     return variableSpace;
   }
 
-  /** @param variableSpace The variableSpace to set */
-  public void setVariableSpace(IVariables variableSpace) {
-    this.variableSpace = variableSpace;
-  }
 
   @Override
   public IHopMetadataProvider getMetadataProvider() {

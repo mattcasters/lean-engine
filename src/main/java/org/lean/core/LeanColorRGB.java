@@ -1,10 +1,17 @@
 package org.lean.core;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.awt.Color;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 
-import java.awt.*;
-
+@Getter
+@Setter
+@EqualsAndHashCode(of = {"r", "g", "b"})
+@ToString(includeFieldNames = false)
 public class LeanColorRGB {
 
   public static final LeanColorRGB BLACK = new LeanColorRGB("#000000");
@@ -46,44 +53,8 @@ public class LeanColorRGB {
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof LeanColorRGB)) {
-      return false;
-    }
-    if (obj == this) {
-      return true;
-    }
-    LeanColorRGB color = (LeanColorRGB) obj;
-    return r == color.r && g == color.g && b == color.b;
-  }
-
-  @Override
   public String toString() {
     return "Color(" + r + "," + g + "," + b + ")";
-  }
-
-  public int getR() {
-    return r;
-  }
-
-  public void setR(int r) {
-    this.r = r;
-  }
-
-  public int getG() {
-    return g;
-  }
-
-  public void setG(int g) {
-    this.g = g;
-  }
-
-  public int getB() {
-    return b;
-  }
-
-  public void setB(int b) {
-    this.b = b;
   }
 
   @JsonIgnore
@@ -93,7 +64,6 @@ public class LeanColorRGB {
     if (hex.length() < 6) {
       hex = "0" + hex;
     }
-    hex = "#" + hex;
-    return hex;
+    return "#" + hex;
   }
 }

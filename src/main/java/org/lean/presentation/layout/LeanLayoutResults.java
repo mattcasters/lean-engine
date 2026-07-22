@@ -22,8 +22,12 @@ import org.lean.core.exception.LeanException;
 import org.lean.presentation.component.LeanComponent;
 import org.lean.presentation.datacontext.IDataContext;
 import org.lean.presentation.page.LeanPage;
+import lombok.Getter;
+import lombok.Setter;
 
 /** Contains layout results of a presentation */
+@Getter
+@Setter
 public class LeanLayoutResults {
 
   private Map<String, LeanGeometry> componentGeometryMap;
@@ -262,71 +266,5 @@ public class LeanLayoutResults {
         throw new LeanException("Error merging PDF documents into " + pdfFilename, e);
       }
     }
-  }
-
-  /**
-   * Gets renderPages
-   *
-   * @return value of renderPages
-   */
-  public List<LeanRenderPage> getRenderPages() {
-    return renderPages;
-  }
-
-  /**
-   * @param renderPages The renderPages to set
-   */
-  public void setRenderPages(List<LeanRenderPage> renderPages) {
-    this.renderPages = renderPages;
-  }
-
-  /**
-   * Gets log
-   *
-   * @return value of log
-   */
-  public ILogChannel getLog() {
-    return log;
-  }
-
-  /**
-   * @param log The log to set
-   */
-  public void setLog(ILogChannel log) {
-    this.log = log;
-  }
-
-  /**
-   * Gets id
-   *
-   * @return value of id
-   */
-  public String getId() {
-    return id;
-  }
-
-  /**
-   * @param id The id to set
-   */
-  public void setId(String id) {
-    this.id = id;
-  }
-
-  /**
-   * Gets dataContext
-   *
-   * @return value of dataContext
-   */
-  public IDataContext getDataContext() {
-    return dataContext;
-  }
-
-  /**
-   * Sets dataContext
-   *
-   * @param dataContext value of dataContext
-   */
-  public void setDataContext(IDataContext dataContext) {
-    this.dataContext = dataContext;
   }
 }

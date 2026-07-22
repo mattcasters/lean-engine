@@ -16,12 +16,16 @@ import org.lean.presentation.connector.type.LeanConnectorPlugin;
 import org.lean.presentation.connector.types.passthrough.PassthroughRowListener;
 import org.lean.presentation.datacontext.ChainDataContext;
 import org.lean.presentation.datacontext.IDataContext;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonDeserialize(as = LeanChainConnector.class)
 @LeanConnectorPlugin(
     id = "ChainConnector",
     name = "Chain connectors",
     description = "Chain multiple connectors, encapsulate in a single connector")
+@Getter
+@Setter
 public class LeanChainConnector extends LeanBaseConnector implements ILeanConnector {
 
   public static final String STRING_LAST_CONNECTOR_NAME = "_RESULT_OF_CHAIN_";
@@ -127,13 +131,5 @@ public class LeanChainConnector extends LeanBaseConnector implements ILeanConnec
       detachFromSource();
       finishedQueue = null;
     }
-  }
-
-  public List<ILeanConnector> getConnectors() {
-    return connectors;
-  }
-
-  public void setConnectors(List<ILeanConnector> connectors) {
-    this.connectors = connectors;
   }
 }

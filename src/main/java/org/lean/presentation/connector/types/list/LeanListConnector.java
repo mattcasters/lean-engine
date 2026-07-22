@@ -14,6 +14,8 @@ import org.lean.presentation.datacontext.IDataContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 /** A simple wrapper around a java.util.List of Strings. */
 @JsonDeserialize(as = LeanListConnector.class)
@@ -21,6 +23,8 @@ import java.util.List;
     id = "LeanListConnector",
     name = "List",
     description = "A simple connector for embedded usage")
+@Getter
+@Setter
 public class LeanListConnector extends LeanBaseConnector implements ILeanConnector {
 
   @HopMetadataProperty private String columnName;
@@ -67,33 +71,5 @@ public class LeanListConnector extends LeanBaseConnector implements ILeanConnect
   @Override
   public void waitUntilFinished() throws LeanException {
     // Nothing to do here, everything was done in startStreaming()
-  }
-
-  /**
-   * Gets columnName
-   *
-   * @return value of columnName
-   */
-  public String getColumnName() {
-    return columnName;
-  }
-
-  /** @param columnName The columnName to set */
-  public void setColumnName(String columnName) {
-    this.columnName = columnName;
-  }
-
-  /**
-   * Gets list
-   *
-   * @return value of list
-   */
-  public List<String> getList() {
-    return list;
-  }
-
-  /** @param list The list to set */
-  public void setList(List<String> list) {
-    this.list = list;
   }
 }

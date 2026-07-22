@@ -20,6 +20,8 @@ import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
 import org.lean.presentation.connector.type.LeanConnectorPlugin;
 import org.lean.presentation.datacontext.IDataContext;
+import lombok.Getter;
+import lombok.Setter;
 
 /** Select a bunch of columns from a source connector */
 @JsonDeserialize(as = LeanSelectionConnector.class)
@@ -27,6 +29,8 @@ import org.lean.presentation.datacontext.IDataContext;
     id = "SelectionConnector",
     name = "Select fields",
     description = "Makes a selection of fields from a source connector")
+@Getter
+@Setter
 public class LeanSelectionConnector extends LeanBaseConnector implements ILeanConnector {
 
   @JsonIgnore protected ArrayBlockingQueue<Object> finishedQueue;
@@ -149,13 +153,5 @@ public class LeanSelectionConnector extends LeanBaseConnector implements ILeanCo
       detachFromSource();
       finishedQueue = null;
     }
-  }
-
-  public List<LeanColumn> getColumns() {
-    return columns;
-  }
-
-  public void setColumns(List<LeanColumn> columns) {
-    this.columns = columns;
   }
 }

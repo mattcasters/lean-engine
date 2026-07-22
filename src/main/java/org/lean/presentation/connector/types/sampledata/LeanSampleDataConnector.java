@@ -16,12 +16,16 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonDeserialize(as = LeanSampleDataConnector.class)
 @LeanConnectorPlugin(
     id = "SampleDataConnector",
     name = "Sample data",
     description = "A sample data connector giving back a configurable list of sample rows")
+@Getter
+@Setter
 public class LeanSampleDataConnector extends LeanBaseConnector implements ILeanConnector {
 
   @HopMetadataProperty private int rowCount;
@@ -127,19 +131,5 @@ public class LeanSampleDataConnector extends LeanBaseConnector implements ILeanC
   @Override
   public void waitUntilFinished() throws LeanException {
     // StartStreaming works synchronized, no need to get complicated about it
-  }
-
-  /**
-   * Gets rowCount
-   *
-   * @return value of rowCount
-   */
-  public int getRowCount() {
-    return rowCount;
-  }
-
-  /** @param rowCount The rowCount to set */
-  public void setRowCount(int rowCount) {
-    this.rowCount = rowCount;
   }
 }

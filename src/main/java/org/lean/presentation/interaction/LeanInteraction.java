@@ -3,6 +3,8 @@ package org.lean.presentation.interaction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.draw.DrawnItem;
 
@@ -10,12 +12,12 @@ import org.lean.core.draw.DrawnItem;
  * Describes an interaction: method: how the user interacts. location: where the interaction can
  * take place action: what needs to happen
  */
+@Getter
+@Setter
 public class LeanInteraction {
 
   @HopMetadataProperty private LeanInteractionMethod method;
-
   @HopMetadataProperty private LeanInteractionLocation location;
-
   @HopMetadataProperty private List<LeanInteractionAction> actions;
 
   public LeanInteraction() {
@@ -45,53 +47,5 @@ public class LeanInteraction {
       return false;
     }
     return location.matches(drawnItem);
-  }
-
-  /**
-   * Gets method
-   *
-   * @return value of method
-   */
-  public LeanInteractionMethod getMethod() {
-    return method;
-  }
-
-  /**
-   * @param method The method to set
-   */
-  public void setMethod(LeanInteractionMethod method) {
-    this.method = method;
-  }
-
-  /**
-   * Gets location
-   *
-   * @return value of location
-   */
-  public LeanInteractionLocation getLocation() {
-    return location;
-  }
-
-  /**
-   * @param location The location to set
-   */
-  public void setLocation(LeanInteractionLocation location) {
-    this.location = location;
-  }
-
-  /**
-   * Gets the list of actions
-   *
-   * @return List of actions
-   */
-  public List<LeanInteractionAction> getActions() {
-    return actions;
-  }
-
-  /**
-   * @param actions The action to set
-   */
-  public void setActions(List<LeanInteractionAction> actions) {
-    this.actions = actions;
   }
 }

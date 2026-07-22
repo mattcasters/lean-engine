@@ -37,9 +37,13 @@ import org.lean.presentation.layout.LeanRenderPage;
 import org.lean.presentation.page.LeanPage;
 import org.lean.presentation.theme.LeanTheme;
 import org.lean.render.IRenderContext;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonDeserialize(as = LeanTableComponent.class)
 @LeanComponentPlugin(id = "LeanTableComponent", name = "Table", description = "A table component")
+@Getter
+@Setter
 public class LeanTableComponent extends LeanBaseComponent implements ILeanComponent {
 
   public static final String DATA_TABLE_DETAILS = "table_details";
@@ -690,167 +694,5 @@ public class LeanTableComponent extends LeanBaseComponent implements ILeanCompon
       return getDefaultColor();
     }
     throw new LeanException("No grid color nor default color defined (no theme used or found)");
-  }
-
-  /**
-   * Gets horizontalMargin
-   *
-   * @return value of horizontalMargin
-   */
-  public int getHorizontalMargin() {
-    return horizontalMargin;
-  }
-
-  /**
-   * @param horizontalMargin The horizontalMargin to set
-   */
-  public void setHorizontalMargin(int horizontalMargin) {
-    this.horizontalMargin = horizontalMargin;
-  }
-
-  /**
-   * Gets verticalMargin
-   *
-   * @return value of verticalMargin
-   */
-  public int getVerticalMargin() {
-    return verticalMargin;
-  }
-
-  /**
-   * @param verticalMargin The verticalMargin to set
-   */
-  public void setVerticalMargin(int verticalMargin) {
-    this.verticalMargin = verticalMargin;
-  }
-
-  /**
-   * Gets gridColor
-   *
-   * @return value of gridColor
-   */
-  public LeanColorRGB getGridColor() {
-    return gridColor;
-  }
-
-  /**
-   * @param gridColor The gridColor to set
-   */
-  public void setGridColor(LeanColorRGB gridColor) {
-    this.gridColor = gridColor;
-  }
-
-  /**
-   * Gets headerFont
-   *
-   * @return value of headerFont
-   */
-  public LeanFont getHeaderFont() {
-    return headerFont;
-  }
-
-  /**
-   * @param headerFont The headerFont to set
-   */
-  public void setHeaderFont(LeanFont headerFont) {
-    this.headerFont = headerFont;
-  }
-
-  /**
-   * Gets header
-   *
-   * @return value of header
-   */
-  public boolean isHeader() {
-    return header;
-  }
-
-  /**
-   * @param header The header to set
-   */
-  public void setHeader(boolean header) {
-    this.header = header;
-  }
-
-  /**
-   * Gets evenHeights
-   *
-   * @return value of evenHeights
-   */
-  public boolean isEvenHeights() {
-    return evenHeights;
-  }
-
-  /**
-   * @param evenHeights The evenHeights to set
-   */
-  public void setEvenHeights(boolean evenHeights) {
-    this.evenHeights = evenHeights;
-  }
-
-  /**
-   * Gets headerOnEveryPage
-   *
-   * @return value of headerOnEveryPage
-   */
-  public boolean isHeaderOnEveryPage() {
-    return headerOnEveryPage;
-  }
-
-  /**
-   * @param headerOnEveryPage The headerOnEveryPage to set
-   */
-  public void setHeaderOnEveryPage(boolean headerOnEveryPage) {
-    this.headerOnEveryPage = headerOnEveryPage;
-  }
-
-  /**
-   * Gets columnSelection
-   *
-   * @return value of columnSelection
-   */
-  public List<LeanColumn> getColumnSelection() {
-    return columnSelection;
-  }
-
-  /**
-   * @param columnSelection The columnSelection to set
-   */
-  public void setColumnSelection(List<LeanColumn> columnSelection) {
-    this.columnSelection = columnSelection;
-  }
-
-  /**
-   * Gets gridLineWidth
-   *
-   * @return value of gridLineWidth
-   */
-  public String getGridLineWidth() {
-    return gridLineWidth;
-  }
-
-  /**
-   * @param gridLineWidth The gridLineWidth to set
-   */
-  public void setGridLineWidth(String gridLineWidth) {
-    this.gridLineWidth = gridLineWidth;
-  }
-
-  /**
-   * Gets headerBackGroundColor
-   *
-   * @return value of headerBackGroundColor
-   */
-  public LeanColorRGB getHeaderBackGroundColor() {
-    return headerBackGroundColor;
-  }
-
-  /**
-   * Sets headerBackGroundColor
-   *
-   * @param headerBackGroundColor value of headerBackGroundColor
-   */
-  public void setHeaderBackGroundColor(LeanColorRGB headerBackGroundColor) {
-    this.headerBackGroundColor = headerBackGroundColor;
   }
 }

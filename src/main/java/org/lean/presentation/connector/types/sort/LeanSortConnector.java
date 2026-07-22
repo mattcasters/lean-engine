@@ -20,10 +20,14 @@ import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
 import org.lean.presentation.connector.type.LeanConnectorPlugin;
 import org.lean.presentation.datacontext.IDataContext;
+import lombok.Getter;
+import lombok.Setter;
 
 /** Sort rows from a source connector using a selection of columns */
 @JsonDeserialize(as = LeanSortConnector.class)
 @LeanConnectorPlugin(id = "SortConnector", name = "Sort rows", description = "Sorts all rows")
+@Getter
+@Setter
 public class LeanSortConnector extends LeanBaseConnector implements ILeanConnector {
 
   @JsonIgnore protected ArrayBlockingQueue<Object> finishedQueue;
@@ -162,21 +166,5 @@ public class LeanSortConnector extends LeanBaseConnector implements ILeanConnect
       detachFromSource();
       finishedQueue = null;
     }
-  }
-
-  public List<LeanColumn> getColumns() {
-    return columns;
-  }
-
-  public void setColumns(List<LeanColumn> columns) {
-    this.columns = columns;
-  }
-
-  public List<LeanSortMethod> getSortMethods() {
-    return sortMethods;
-  }
-
-  public void setSortMethods(List<LeanSortMethod> sortMethods) {
-    this.sortMethods = sortMethods;
   }
 }

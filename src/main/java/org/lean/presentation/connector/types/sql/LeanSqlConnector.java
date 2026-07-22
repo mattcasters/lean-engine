@@ -16,12 +16,16 @@ import org.lean.presentation.connector.type.LeanConnectorPlugin;
 import org.lean.presentation.datacontext.IDataContext;
 
 import java.sql.ResultSet;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonDeserialize(as = LeanSqlConnector.class)
 @LeanConnectorPlugin(
     id = "SqlConnector",
     name = "Execute a SQL query",
     description = "Reads data from a relational database using a SQL query")
+@Getter
+@Setter
 public class LeanSqlConnector extends LeanBaseConnector implements ILeanConnector {
 
   @HopMetadataProperty private String databaseConnectionName;
@@ -128,33 +132,5 @@ public class LeanSqlConnector extends LeanBaseConnector implements ILeanConnecto
   @Override
   public void waitUntilFinished() throws LeanException {
     // StartStreaming works synchronized, no need to get complicated about it
-  }
-
-  /**
-   * Gets databaseConnectionName
-   *
-   * @return value of databaseConnectionName
-   */
-  public String getDatabaseConnectionName() {
-    return databaseConnectionName;
-  }
-
-  /** @param databaseConnectionName The databaseConnectionName to set */
-  public void setDatabaseConnectionName(String databaseConnectionName) {
-    this.databaseConnectionName = databaseConnectionName;
-  }
-
-  /**
-   * Gets sql
-   *
-   * @return value of sql
-   */
-  public String getSql() {
-    return sql;
-  }
-
-  /** @param sql The sql to set */
-  public void setSql(String sql) {
-    this.sql = sql;
   }
 }

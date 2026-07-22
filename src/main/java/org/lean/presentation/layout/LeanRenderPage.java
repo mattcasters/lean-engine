@@ -15,8 +15,12 @@ import org.lean.presentation.component.LeanComponent;
 import org.lean.presentation.page.LeanPage;
 
 import static org.lean.core.draw.DrawnItem.Category;
+import lombok.Getter;
+import lombok.Setter;
 
 /** A page on which we can render... */
+@Getter
+@Setter
 public class LeanRenderPage {
   /** The original page */
   private LeanPage page;
@@ -158,85 +162,5 @@ public class LeanRenderPage {
       }
     }
     return null;
-  }
-
-  /**
-   * Gets page
-   *
-   * @return value of page
-   */
-  public LeanPage getPage() {
-    return page;
-  }
-
-  /**
-   * @param page The page to set
-   */
-  public void setPage(LeanPage page) {
-    this.page = page;
-  }
-
-  /**
-   * Gets gc
-   *
-   * @return value of gc
-   */
-  public HopSvgGraphics2D getGc() {
-    return gc;
-  }
-
-  /**
-   * @param gc The gc to set
-   */
-  public void setGc(HopSvgGraphics2D gc) {
-    this.gc = gc;
-  }
-
-  /**
-   * Gets layoutResults
-   *
-   * @return value of layoutResults
-   */
-  public List<LeanComponentLayoutResult> getLayoutResults() {
-    return layoutResults;
-  }
-
-  /**
-   * @param layoutResults The layoutResults to set
-   */
-  public void setLayoutResults(List<LeanComponentLayoutResult> layoutResults) {
-    this.layoutResults = layoutResults;
-  }
-
-  /**
-   * Gets pageNumber
-   *
-   * @return value of pageNumber
-   */
-  public int getPageNumber() {
-    return pageNumber;
-  }
-
-  /**
-   * @param pageNumber The pageNumber to set
-   */
-  public void setPageNumber(int pageNumber) {
-    this.pageNumber = pageNumber;
-  }
-
-  /**
-   * Gets drawnItems
-   *
-   * @return value of drawnItems
-   */
-  public List<DrawnItem> getDrawnItems() {
-    return drawnItems;
-  }
-
-  /**
-   * @param drawnItems The drawnItems to set
-   */
-  public void setDrawnItems(List<DrawnItem> drawnItems) {
-    this.drawnItems = drawnItems;
   }
 }

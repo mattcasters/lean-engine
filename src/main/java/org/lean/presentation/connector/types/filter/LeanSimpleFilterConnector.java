@@ -20,6 +20,8 @@ import org.lean.presentation.connector.LeanConnector;
 import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
 import org.lean.presentation.datacontext.IDataContext;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Filters rows by exact string equality on field values.
@@ -29,6 +31,8 @@ import org.lean.presentation.datacontext.IDataContext;
  * (the row value must be in the set of filter values for that field).
  */
 @JsonDeserialize(as = LeanSimpleFilterConnector.class)
+@Getter
+@Setter
 public class LeanSimpleFilterConnector extends LeanBaseConnector implements ILeanConnector {
 
   @JsonIgnore protected ArrayBlockingQueue<Object> finishedQueue;
@@ -158,13 +162,5 @@ public class LeanSimpleFilterConnector extends LeanBaseConnector implements ILea
       detachFromSource();
       finishedQueue = null;
     }
-  }
-
-  public List<SimpleFilterValue> getFilterValues() {
-    return filterValues;
-  }
-
-  public void setFilterValues(List<SimpleFilterValue> filterValues) {
-    this.filterValues = filterValues;
   }
 }

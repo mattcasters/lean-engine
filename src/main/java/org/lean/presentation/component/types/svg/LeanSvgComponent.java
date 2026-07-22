@@ -25,9 +25,13 @@ import org.lean.presentation.layout.LeanRenderPage;
 import org.lean.presentation.page.LeanPage;
 import org.lean.render.IRenderContext;
 import org.w3c.dom.Node;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonDeserialize(as = LeanSvgComponent.class)
 @LeanComponentPlugin(id = "LeanSvgComponent", name = "SVG", description = "An SVG component")
+@Getter
+@Setter
 public class LeanSvgComponent extends LeanBaseComponent implements ILeanComponent {
 
   public static final String DATA_SVG_DETAILS = "SVG Details";
@@ -240,33 +244,5 @@ public class LeanSvgComponent extends LeanBaseComponent implements ILeanComponen
         details.xMagnification,
         details.yMagnification,
         0d);
-  }
-
-  /**
-   * Gets filename
-   *
-   * @return value of filename
-   */
-  public String getFilename() {
-    return filename;
-  }
-
-  /** @param filename The filename to set */
-  public void setFilename(String filename) {
-    this.filename = filename;
-  }
-
-  /**
-   * Gets scaleType
-   *
-   * @return value of scaleType
-   */
-  public ScaleType getScaleType() {
-    return scaleType;
-  }
-
-  /** @param scaleType The scaleType to set */
-  public void setScaleType(ScaleType scaleType) {
-    this.scaleType = scaleType;
   }
 }

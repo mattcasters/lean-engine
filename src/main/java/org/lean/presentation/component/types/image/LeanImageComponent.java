@@ -24,9 +24,13 @@ import javax.imageio.ImageIO;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.net.URL;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonDeserialize(as = LeanImageComponent.class)
 @LeanComponentPlugin(id = "LeanImageComponent", name = "Image", description = "An image component")
+@Getter
+@Setter
 public class LeanImageComponent extends LeanBaseComponent implements ILeanComponent {
 
   public static final String DATA_IMAGE_DETAILS = "Image Details";
@@ -156,33 +160,5 @@ public class LeanImageComponent extends LeanBaseComponent implements ILeanCompon
           details.imageSize.getWidth(),
           details.imageSize.getHeight());
     }
-  }
-
-  /**
-   * Gets filename
-   *
-   * @return value of filename
-   */
-  public String getFilename() {
-    return filename;
-  }
-
-  /** @param filename The filename to set */
-  public void setFilename(String filename) {
-    this.filename = filename;
-  }
-
-  /**
-   * Gets scalePercent
-   *
-   * @return value of scalePercent
-   */
-  public String getScalePercent() {
-    return scalePercent;
-  }
-
-  /** @param scalePercent The scalePercent to set */
-  public void setScalePercent(String scalePercent) {
-    this.scalePercent = scalePercent;
   }
 }

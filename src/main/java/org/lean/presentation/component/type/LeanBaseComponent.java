@@ -29,7 +29,12 @@ import org.lean.presentation.layout.LeanRenderPage;
 import org.lean.presentation.page.LeanPage;
 import org.lean.presentation.theme.LeanTheme;
 import org.lean.render.IRenderContext;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public abstract class LeanBaseComponent implements ILeanComponent {
 
   @HopMetadataProperty @JsonProperty protected String pluginId;
@@ -44,7 +49,10 @@ public abstract class LeanBaseComponent implements ILeanComponent {
 
   // Fields below are not serialized
   //
-  @JsonIgnore protected transient ILogChannel log;
+  @JsonIgnore
+  @Getter(AccessLevel.NONE)
+  @Setter(AccessLevel.NONE)
+  protected transient ILogChannel log;
 
   public LeanBaseComponent() {}
 
@@ -706,149 +714,5 @@ public abstract class LeanBaseComponent implements ILeanComponent {
   @JsonIgnore
   public void setLogChannel(ILogChannel log) {
     this.log = log;
-  }
-
-  /**
-   * Gets pluginId
-   *
-   * @return value of pluginId
-   */
-  public String getPluginId() {
-    return pluginId;
-  }
-
-  /**
-   * @param pluginId The pluginId to set
-   */
-  public void setPluginId(String pluginId) {
-    this.pluginId = pluginId;
-  }
-
-  /**
-   * Gets sourceConnectorName
-   *
-   * @return value of sourceConnectorName
-   */
-  public String getSourceConnectorName() {
-    return sourceConnectorName;
-  }
-
-  /**
-   * @param sourceConnectorName The sourceConnectorName to set
-   */
-  public void setSourceConnectorName(String sourceConnectorName) {
-    this.sourceConnectorName = sourceConnectorName;
-  }
-
-  /**
-   * Gets defaultFont
-   *
-   * @return value of defaultFont
-   */
-  public LeanFont getDefaultFont() {
-    return defaultFont;
-  }
-
-  /**
-   * @param defaultFont The defaultFont to set
-   */
-  public void setDefaultFont(LeanFont defaultFont) {
-    this.defaultFont = defaultFont;
-  }
-
-  /**
-   * Gets defaultColor
-   *
-   * @return value of defaultColor
-   */
-  public LeanColorRGB getDefaultColor() {
-    return defaultColor;
-  }
-
-  /**
-   * @param defaultColor The defaultColor to set
-   */
-  public void setDefaultColor(LeanColorRGB defaultColor) {
-    this.defaultColor = defaultColor;
-  }
-
-  /**
-   * Gets background
-   *
-   * @return value of background
-   */
-  public boolean isBackground() {
-    return background;
-  }
-
-  /**
-   * @param background The background to set
-   */
-  public void setBackground(boolean background) {
-    this.background = background;
-  }
-
-  /**
-   * Gets backGroundColor
-   *
-   * @return value of backGroundColor
-   */
-  public LeanColorRGB getBackGroundColor() {
-    return backGroundColor;
-  }
-
-  /**
-   * @param backGroundColor The backGroundColor to set
-   */
-  public void setBackGroundColor(LeanColorRGB backGroundColor) {
-    this.backGroundColor = backGroundColor;
-  }
-
-  /**
-   * Gets border
-   *
-   * @return value of border
-   */
-  public boolean isBorder() {
-    return border;
-  }
-
-  /**
-   * @param border The border to set
-   */
-  public void setBorder(boolean border) {
-    this.border = border;
-  }
-
-  /**
-   * Gets borderColor
-   *
-   * @return value of borderColor
-   */
-  public LeanColorRGB getBorderColor() {
-    return borderColor;
-  }
-
-  /**
-   * @param borderColor The borderColor to set
-   */
-  public void setBorderColor(LeanColorRGB borderColor) {
-    this.borderColor = borderColor;
-  }
-
-  /**
-   * Gets themeName
-   *
-   * @return value of themeName
-   */
-  public String getThemeName() {
-    return themeName;
-  }
-
-  /**
-   * @param themeName The themeName to set
-   */
-  public void setThemeName(String themeName) {
-    this.themeName = themeName;
   }
 }

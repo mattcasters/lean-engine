@@ -16,11 +16,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import lombok.Getter;
+import lombok.Setter;
 
 @HopMetadata(
     key = "connector",
     name = "Connector",
     description = "Connector between components and data sources")
+@Getter
+@Setter
 public class LeanConnector extends HopMetadataBase implements IHopMetadata {
 
   /** The name of the connector */
@@ -95,29 +99,5 @@ public class LeanConnector extends HopMetadataBase implements IHopMetadata {
 
   public IRowMeta describeOutput(IDataContext dataContext) throws LeanException {
     return connector.describeOutput(dataContext);
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public ILeanConnector getConnector() {
-    return connector;
-  }
-
-  public void setConnector(ILeanConnector connector) {
-    this.connector = connector;
-  }
-
-  public boolean isShared() {
-    return shared;
-  }
-
-  public void setShared(boolean shared) {
-    this.shared = shared;
   }
 }

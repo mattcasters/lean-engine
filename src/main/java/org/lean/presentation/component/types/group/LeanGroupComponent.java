@@ -34,6 +34,8 @@ import org.lean.render.IRenderContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * This is a groupComponent which repeats the given groupComponent for every row in the given
@@ -62,6 +64,8 @@ import java.util.List;
     id = "LeanGroupComponent",
     name = "Group",
     description = "A way to render another component multiple times creating groups of data")
+@Getter
+@Setter
 public class LeanGroupComponent extends LeanBaseComponent implements ILeanComponent {
 
   public static final String DATA_GROUP_DETAILS = "DATA_GROUP_DETAILS";
@@ -406,75 +410,5 @@ public class LeanGroupComponent extends LeanBaseComponent implements ILeanCompon
       //
       groupComponent.getComponent().render(layoutResult, results, renderContext, offSet);
     }
-  }
-
-  /**
-   * Gets columnSelection
-   *
-   * @return value of columnSelection
-   */
-  public List<LeanColumn> getColumnSelection() {
-    return columnSelection;
-  }
-
-  /** @param columnSelection The columnSelection to set */
-  public void setColumnSelection(List<LeanColumn> columnSelection) {
-    this.columnSelection = columnSelection;
-  }
-
-  /**
-   * Gets columnSorts
-   *
-   * @return value of columnSorts
-   */
-  public List<LeanSortMethod> getColumnSorts() {
-    return columnSorts;
-  }
-
-  /** @param columnSorts The columnSorts to set */
-  public void setColumnSorts(List<LeanSortMethod> columnSorts) {
-    this.columnSorts = columnSorts;
-  }
-
-  /**
-   * Gets distinctSelection
-   *
-   * @return value of distinctSelection
-   */
-  public boolean isDistinctSelection() {
-    return distinctSelection;
-  }
-
-  /** @param distinctSelection The distinctSelection to set */
-  public void setDistinctSelection(boolean distinctSelection) {
-    this.distinctSelection = distinctSelection;
-  }
-
-  /**
-   * Gets groupComponent
-   *
-   * @return value of groupComponent
-   */
-  public LeanComponent getGroupComponent() {
-    return groupComponent;
-  }
-
-  /** @param groupComponent The groupComponent to set */
-  public void setGroupComponent(LeanComponent groupComponent) {
-    this.groupComponent = groupComponent;
-  }
-
-  /**
-   * Gets verticalMargin
-   *
-   * @return value of verticalMargin
-   */
-  public int getVerticalMargin() {
-    return verticalMargin;
-  }
-
-  /** @param verticalMargin The verticalMargin to set */
-  public void setVerticalMargin(int verticalMargin) {
-    this.verticalMargin = verticalMargin;
   }
 }

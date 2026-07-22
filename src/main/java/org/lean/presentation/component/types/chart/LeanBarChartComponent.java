@@ -25,12 +25,16 @@ import org.lean.render.IRenderContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonDeserialize(as = LeanBarChartComponent.class)
 @LeanComponentPlugin(
     id = "LeanBarChartComponent",
     name = "Bar Chart",
     description = "A bar chart component")
+@Getter
+@Setter
 public class LeanBarChartComponent extends LeanBaseChartComponent implements ILeanComponent {
 
   /** % of the width allocated for the horizontal value */
@@ -377,33 +381,5 @@ public class LeanBarChartComponent extends LeanBaseChartComponent implements ILe
         rowNr++;
       }
     }
-  }
-
-  /**
-   * Gets widthPercentage
-   *
-   * @return value of widthPercentage
-   */
-  public String getWidthPercentage() {
-    return widthPercentage;
-  }
-
-  /** @param widthPercentage The widthPercentage to set */
-  public void setWidthPercentage(String widthPercentage) {
-    this.widthPercentage = widthPercentage;
-  }
-
-  /**
-   * Gets showingFactValues
-   *
-   * @return value of showingFactValues
-   */
-  public boolean isShowingFactValues() {
-    return showingFactValues;
-  }
-
-  /** @param showingFactValues The showingFactValues to set */
-  public void setShowingFactValues(boolean showingFactValues) {
-    this.showingFactValues = showingFactValues;
   }
 }

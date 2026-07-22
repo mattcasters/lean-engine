@@ -54,11 +54,15 @@ import org.lean.presentation.variable.LeanParameter;
 import org.lean.presentation.variable.LeanParameterMapping;
 import org.lean.render.IRenderContext;
 import org.lean.render.context.PresentationRenderContext;
+import lombok.Getter;
+import lombok.Setter;
 
 @HopMetadata(
     key = "presentation",
     name = "Presentation",
     description = "Top level document of the presentation metadata")
+@Getter
+@Setter
 public class LeanPresentation extends HopMetadataBase implements IHasIdentity, IHopMetadata {
 
   @HopMetadataProperty private String description;
@@ -675,147 +679,5 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
    */
   public int getPageIndex(LeanPage page) {
     return pages.indexOf(page);
-  }
-
-  /**
-   * @return the description
-   */
-  public String getDescription() {
-    return description;
-  }
-
-  /**
-   * @param description the description to set
-   */
-  public void setDescription(String description) {
-    this.description = description;
-  }
-
-  /**
-   * @return the connectors
-   */
-  public List<LeanConnector> getConnectors() {
-    return connectors;
-  }
-
-  /**
-   * @param connectors the connectors to set
-   */
-  public void setConnectors(List<LeanConnector> connectors) {
-    this.connectors = connectors;
-  }
-
-  /**
-   * Gets pages
-   *
-   * @return value of pages
-   */
-  public List<LeanPage> getPages() {
-    return pages;
-  }
-
-  /**
-   * @param pages The pages to set
-   */
-  public void setPages(List<LeanPage> pages) {
-    this.pages = pages;
-  }
-
-  /**
-   * Gets header
-   *
-   * @return value of header
-   */
-  public LeanPage getHeader() {
-    return header;
-  }
-
-  /**
-   * @param header The header to set
-   */
-  public void setHeader(LeanPage header) {
-    this.header = header;
-  }
-
-  /**
-   * Gets footer
-   *
-   * @return value of footer
-   */
-  public LeanPage getFooter() {
-    return footer;
-  }
-
-  /**
-   * @param footer The footer to set
-   */
-  public void setFooter(LeanPage footer) {
-    this.footer = footer;
-  }
-
-  /**
-   * Gets themes
-   *
-   * @return value of themes
-   */
-  public List<LeanTheme> getThemes() {
-    return themes;
-  }
-
-  /**
-   * @param themes The themes to set
-   */
-  public void setThemes(List<LeanTheme> themes) {
-    this.themes = themes;
-  }
-
-  /**
-   * Gets defaultThemeName
-   *
-   * @return value of defaultThemeName
-   */
-  public String getDefaultThemeName() {
-    return defaultThemeName;
-  }
-
-  /**
-   * @param defaultThemeName The defaultThemeName to set
-   */
-  public void setDefaultThemeName(String defaultThemeName) {
-    this.defaultThemeName = defaultThemeName;
-  }
-
-  /**
-   * Gets interactions
-   *
-   * @return value of interactions
-   */
-  public List<LeanInteraction> getInteractions() {
-    return interactions;
-  }
-
-  /**
-   * @param interactions The interactions to set
-   */
-  public void setInteractions(List<LeanInteraction> interactions) {
-    this.interactions = interactions;
-  }
-
-  /**
-   * Gets parameterMappings
-   *
-   * @return value of parameterMappings
-   */
-  public List<LeanParameterMapping> getParameterMappings() {
-    return parameterMappings;
-  }
-
-  /**
-   * Sets parameterMappings
-   *
-   * @param parameterMappings value of parameterMappings
-   */
-  public void setParameterMappings(List<LeanParameterMapping> parameterMappings) {
-    this.parameterMappings = parameterMappings;
   }
 }

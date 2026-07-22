@@ -29,6 +29,8 @@ import org.lean.presentation.page.LeanPage;
 import org.lean.presentation.theme.LeanTheme;
 import org.lean.render.IRenderContext;
 import org.lean.render.context.SimpleRenderContext;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Main component class encapsulating component plugins through ILeanComponent
@@ -36,6 +38,8 @@ import org.lean.render.context.SimpleRenderContext;
  * @author matt
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Getter
+@Setter
 public class LeanComponent extends HopMetadataBase implements IHopMetadata {
 
   @HopMetadataProperty private LeanLayout layout;
@@ -213,100 +217,6 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
     return renderPage.getSvgXml();
   }
 
-  /**
-   * @return the component
-   */
-  public ILeanComponent getComponent() {
-    return component;
-  }
-
-  /**
-   * @param component the component to set
-   */
-  public void setComponent(ILeanComponent component) {
-    this.component = component;
-  }
-
-  public boolean isShared() {
-    return shared;
-  }
-
-  public void setShared(boolean shared) {
-    this.shared = shared;
-  }
-
-  /**
-   * Gets layout
-   *
-   * @return value of layout
-   */
-  public LeanLayout getLayout() {
-    return layout;
-  }
-
-  /**
-   * @param layout The layout to set
-   */
-  public void setLayout(LeanLayout layout) {
-    this.layout = layout;
-  }
-
-  /**
-   * Gets rotation
-   *
-   * @return value of rotation
-   */
-  public String getRotation() {
-    return rotation;
-  }
-
-  /**
-   * @param rotation The rotation to set
-   */
-  public void setRotation(String rotation) {
-    this.rotation = rotation;
-  }
-
-  /**
-   * Gets transparency
-   *
-   * @return value of transparency
-   */
-  public String getTransparency() {
-    return transparency;
-  }
-
-  /**
-   * @param transparency The transparency to set
-   */
-  public void setTransparency(String transparency) {
-    this.transparency = transparency;
-  }
-
-  /**
-   * Gets clipSize
-   *
-   * @return value of clipSize
-   */
-  public LeanSize getClipSize() {
-    return clipSize;
-  }
-
-  /**
-   * @param clipSize The clipSize to set
-   */
-  public void setClipSize(LeanSize clipSize) {
-    this.clipSize = clipSize;
-  }
-
-  /**
-   * Gets processSourceDataListeners
-   *
-   * @return value of processSourceDataListeners
-   */
-  public List<IProcessSourceDataListener> getProcessSourceDataListeners() {
-    return processSourceDataListeners;
-  }
 
   /**
    * @param processSourceDataListeners The processSourceDataListeners to set
@@ -314,21 +224,5 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
   public void setProcessSourceDataListeners(
       List<IProcessSourceDataListener> processSourceDataListeners) {
     this.processSourceDataListeners = processSourceDataListeners;
-  }
-
-  /**
-   * Gets doLayoutListeners
-   *
-   * @return value of doLayoutListeners
-   */
-  public List<IDoLayoutListener> getDoLayoutListeners() {
-    return doLayoutListeners;
-  }
-
-  /**
-   * @param doLayoutListeners The doLayoutListeners to set
-   */
-  public void setDoLayoutListeners(List<IDoLayoutListener> doLayoutListeners) {
-    this.doLayoutListeners = doLayoutListeners;
   }
 }

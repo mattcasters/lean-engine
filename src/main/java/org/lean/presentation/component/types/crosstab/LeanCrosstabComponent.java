@@ -40,12 +40,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonDeserialize(as = LeanCrosstabComponent.class)
 @LeanComponentPlugin(
     id = "LeanCrosstabComponent",
     name = "Crosstab",
     description = "A crosstab component")
+@Getter
+@Setter
 public class LeanCrosstabComponent extends LeanBaseAggregatingComponent implements ILeanComponent {
 
   // TODO Implement sub-totals, multiple totals
@@ -1134,89 +1138,5 @@ public class LeanCrosstabComponent extends LeanBaseAggregatingComponent implemen
               new DrawnContext(text));
       drawnItems.add(drawnItem);
     }
-  }
-
-  /**
-   * Gets horizontalMargin
-   *
-   * @return value of horizontalMargin
-   */
-  public int getHorizontalMargin() {
-    return horizontalMargin;
-  }
-
-  /** @param horizontalMargin The horizontalMargin to set */
-  public void setHorizontalMargin(int horizontalMargin) {
-    this.horizontalMargin = horizontalMargin;
-  }
-
-  /**
-   * Gets verticalMargin
-   *
-   * @return value of verticalMargin
-   */
-  public int getVerticalMargin() {
-    return verticalMargin;
-  }
-
-  /** @param verticalMargin The verticalMargin to set */
-  public void setVerticalMargin(int verticalMargin) {
-    this.verticalMargin = verticalMargin;
-  }
-
-  /**
-   * Gets evenHeights
-   *
-   * @return value of evenHeights
-   */
-  public boolean isEvenHeights() {
-    return evenHeights;
-  }
-
-  /** @param evenHeights The evenHeights to set */
-  public void setEvenHeights(boolean evenHeights) {
-    this.evenHeights = evenHeights;
-  }
-
-  /**
-   * Gets headerOnEveryPage
-   *
-   * @return value of headerOnEveryPage
-   */
-  public boolean isHeaderOnEveryPage() {
-    return headerOnEveryPage;
-  }
-
-  /** @param headerOnEveryPage The headerOnEveryPage to set */
-  public void setHeaderOnEveryPage(boolean headerOnEveryPage) {
-    this.headerOnEveryPage = headerOnEveryPage;
-  }
-
-  /**
-   * Gets showingHorizontalSubtotals
-   *
-   * @return value of showingHorizontalSubtotals
-   */
-  public boolean isShowingHorizontalSubtotals() {
-    return showingHorizontalSubtotals;
-  }
-
-  /** @param showingHorizontalSubtotals The showingHorizontalSubtotals to set */
-  public void setShowingHorizontalSubtotals(boolean showingHorizontalSubtotals) {
-    this.showingHorizontalSubtotals = showingHorizontalSubtotals;
-  }
-
-  /**
-   * Gets showingVerticalSubtotals
-   *
-   * @return value of showingVerticalSubtotals
-   */
-  public boolean isShowingVerticalSubtotals() {
-    return showingVerticalSubtotals;
-  }
-
-  /** @param showingVerticalSubtotals The showingVerticalSubtotals to set */
-  public void setShowingVerticalSubtotals(boolean showingVerticalSubtotals) {
-    this.showingVerticalSubtotals = showingVerticalSubtotals;
   }
 }

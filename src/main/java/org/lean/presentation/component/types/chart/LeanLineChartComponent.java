@@ -29,12 +29,16 @@ import org.lean.presentation.component.type.LeanComponentPlugin;
 import org.lean.presentation.layout.LeanLayoutResults;
 import org.lean.presentation.theme.LeanTheme;
 import org.lean.render.IRenderContext;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonDeserialize(as = LeanLineChartComponent.class)
 @LeanComponentPlugin(
     id = "LeanLineChartComponent",
     name = "Line chart",
     description = "A line chart component")
+@Getter
+@Setter
 public class LeanLineChartComponent extends LeanBaseChartComponent implements ILeanComponent {
 
   @HopMetadataProperty protected boolean drawingCurvedTrendLine;
@@ -446,21 +450,5 @@ public class LeanLineChartComponent extends LeanBaseChartComponent implements IL
                 new DrawnContext(seriesLabel)));
       }
     }
-  }
-
-  /**
-   * Gets drawingCurvedTrendLine
-   *
-   * @return value of drawingCurvedTrendLine
-   */
-  public boolean isDrawingCurvedTrendLine() {
-    return drawingCurvedTrendLine;
-  }
-
-  /**
-   * @param drawingCurvedTrendLine The drawingCurvedTrendLine to set
-   */
-  public void setDrawingCurvedTrendLine(boolean drawingCurvedTrendLine) {
-    this.drawingCurvedTrendLine = drawingCurvedTrendLine;
   }
 }

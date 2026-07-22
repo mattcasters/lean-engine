@@ -7,7 +7,11 @@ import org.lean.core.Constants;
 import org.lean.core.exception.LeanException;
 import org.lean.presentation.connector.LeanConnector;
 import org.lean.presentation.layout.LeanRenderPage;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class RenderPageDataContext implements IDataContext {
 
   private IDataContext parentDataContext;
@@ -41,33 +45,6 @@ public class RenderPageDataContext implements IDataContext {
     return connector;
   }
 
-  /**
-   * Gets renderPage
-   *
-   * @return value of renderPage
-   */
-  public LeanRenderPage getRenderPage() {
-    return renderPage;
-  }
-
-  /** @param renderPage The renderPage to set */
-  public void setRenderPage(LeanRenderPage renderPage) {
-    this.renderPage = renderPage;
-  }
-
-  /**
-   * Gets parentDataContext
-   *
-   * @return value of parentDataContext
-   */
-  public IDataContext getParentDataContext() {
-    return parentDataContext;
-  }
-
-  /** @param parentDataContext The parentDataContext to set */
-  public void setParentDataContext(IDataContext parentDataContext) {
-    this.parentDataContext = parentDataContext;
-  }
 
   /**
    * Gets variableSpace
@@ -79,10 +56,6 @@ public class RenderPageDataContext implements IDataContext {
     return variableSpace;
   }
 
-  /** @param variableSpace The variableSpace to set */
-  public void setVariableSpace(IVariables variableSpace) {
-    this.variableSpace = variableSpace;
-  }
 
   @Override
   public IHopMetadataProvider getMetadataProvider() {
