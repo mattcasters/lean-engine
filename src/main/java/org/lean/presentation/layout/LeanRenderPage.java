@@ -3,7 +3,9 @@ package org.lean.presentation.layout;
 import java.awt.Dimension;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.hop.core.svg.HopSvgGraphics2D;
 import org.lean.core.LeanGeometry;
 import org.lean.core.LeanPosition;
@@ -38,8 +40,19 @@ public class LeanRenderPage {
 
   private String svgXml;
 
+  /**
+   * Short layout/render error per component name (drawn on this page, including header/footer).
+   * Populated when a component fails but a placeholder is still painted.
+   */
+  private Map<String, String> componentLayoutErrors;
+
+  /** Full cause-chain / stack detail per component name (for the property editor). */
+  private Map<String, String> componentLayoutErrorDetails;
+
   public LeanRenderPage() {
     layoutResults = new ArrayList<>();
+    componentLayoutErrors = new HashMap<>();
+    componentLayoutErrorDetails = new HashMap<>();
   }
 
   public LeanRenderPage(LeanPage page) {
@@ -53,6 +66,25 @@ public class LeanRenderPage {
     gc.setSVGCanvasSize(new Dimension(page.getWidth(), page.getHeight()));
 
     this.drawnItems = new ArrayList<>();
+  }
+
+  /** Record a layout/render failure for a component drawn on this page. */
+  public void recordComponentError(String componentName, String summary, String detail) {
+    if (componentName == null || componentName.isBlank()) {
+      return;
+    }
+    if (componentLayoutErrors == null) {
+      componentLayoutErrors = new HashMap<>();
+    }
+    if (componentLayoutErrorDetails == null) {
+      componentLayoutErrorDetails = new HashMap<>();
+    }
+    if (summary != null) {
+      componentLayoutErrors.put(componentName, summary);
+    }
+    if (detail != null) {
+      componentLayoutErrorDetails.put(componentName, detail);
+    }
   }
 
   @Override

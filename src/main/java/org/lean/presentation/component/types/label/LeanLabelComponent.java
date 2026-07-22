@@ -1,8 +1,14 @@
 package org.lean.presentation.component.types.label;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.awt.font.TextAttribute;
+import java.text.AttributedString;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.commons.lang3.StringUtils;
+import org.lean.core.gui.plugin.LeanWidgetType;
+import org.lean.core.gui.plugin.LeanWidgetElement;
 import org.apache.hop.core.svg.HopSvgGraphics2D;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.LeanGeometry;
@@ -14,6 +20,7 @@ import org.lean.core.LeanVerticalAlignment;
 import org.lean.core.draw.DrawnContext;
 import org.lean.core.draw.DrawnItem;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
 import org.lean.presentation.LeanComponentLayoutResult;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.component.LeanComponent;
@@ -25,11 +32,6 @@ import org.lean.presentation.layout.LeanLayoutResults;
 import org.lean.presentation.layout.LeanRenderPage;
 import org.lean.presentation.page.LeanPage;
 import org.lean.render.IRenderContext;
-
-import java.awt.font.TextAttribute;
-import java.text.AttributedString;
-import lombok.Getter;
-import lombok.Setter;
 
 @JsonDeserialize(as = LeanLabelComponent.class)
 @LeanComponentPlugin(
@@ -43,15 +45,47 @@ public class LeanLabelComponent extends LeanBaseComponent implements ILeanCompon
   public static final String DATA_TEXT_GEOMETRY = "Text Geometry";
   public static final String DATA_TEXT_STRING = "Text String";
 
-  @HopMetadataProperty private String label;
+  @LeanWidgetElement(
+      order = "10000-label",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Label text",
+      toolTip = "The label text (variables are resolved at render time)")
+  @HopMetadataProperty
+  private String label;
 
-  @HopMetadataProperty private LeanHorizontalAlignment horizontalAlignment;
+  @LeanWidgetElement(
+      order = "10100-underline",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Underline?")
+  @HopMetadataProperty
+  private boolean underline;
 
-  @HopMetadataProperty private LeanVerticalAlignment verticalAlignment;
+  @LeanWidgetElement(
+      order = "10200-horizontalAlignment",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.COMBO,
+      label = "Horizontal alignment")
+  @HopMetadataProperty
+  private LeanHorizontalAlignment horizontalAlignment;
 
-  @HopMetadataProperty private String customHtml;
+  @LeanWidgetElement(
+      order = "10300-verticalAlignment",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.COMBO,
+      label = "Vertical alignment")
+  @HopMetadataProperty
+  private LeanVerticalAlignment verticalAlignment;
 
-  @HopMetadataProperty private boolean underline;
+  @LeanWidgetElement(
+      order = "10400-customHtml",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Custom HTML",
+      toolTip = "Optional custom HTML content")
+  @HopMetadataProperty
+  private String customHtml;
 
   public LeanLabelComponent() {
     super("LeanLabelComponent");

@@ -15,6 +15,9 @@ import org.lean.core.ILeanRowListener;
 import org.lean.core.LeanColumn;
 import org.lean.core.LeanSortMethod;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
+import org.lean.core.gui.plugin.LeanWidgetElement;
+import org.lean.core.gui.plugin.LeanWidgetType;
 import org.lean.presentation.connector.LeanConnector;
 import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
@@ -31,8 +34,23 @@ import lombok.Setter;
 public class LeanSortConnector extends LeanBaseConnector implements ILeanConnector {
 
   @JsonIgnore protected ArrayBlockingQueue<Object> finishedQueue;
-  @HopMetadataProperty private List<LeanColumn> columns;
-  @HopMetadataProperty private List<LeanSortMethod> sortMethods;
+
+  @LeanWidgetElement(
+      order = "10000-columns",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Sort columns")
+  @HopMetadataProperty
+  private List<LeanColumn> columns;
+
+  @LeanWidgetElement(
+      order = "10100-sortMethods",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Sort methods",
+      toolTip = "One method per sort column (same list size)")
+  @HopMetadataProperty
+  private List<LeanSortMethod> sortMethods;
 
   public LeanSortConnector() {
     super("SortConnector");

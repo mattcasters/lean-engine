@@ -2,6 +2,9 @@ package org.lean.presentation.connector.types.sql;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.sql.ResultSet;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.hop.core.database.Database;
 import org.apache.hop.core.database.DatabaseMeta;
 import org.apache.hop.core.logging.LoggingObject;
@@ -10,14 +13,14 @@ import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.apache.hop.metadata.api.IHopMetadataSerializer;
 import org.lean.core.LeanDatabaseConnection;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
+import org.lean.core.gui.plugin.LeanComboSource;
+import org.lean.core.gui.plugin.LeanWidgetElement;
+import org.lean.core.gui.plugin.LeanWidgetType;
 import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
 import org.lean.presentation.connector.type.LeanConnectorPlugin;
 import org.lean.presentation.datacontext.IDataContext;
-
-import java.sql.ResultSet;
-import lombok.Getter;
-import lombok.Setter;
 
 @JsonDeserialize(as = LeanSqlConnector.class)
 @LeanConnectorPlugin(
@@ -28,9 +31,26 @@ import lombok.Setter;
 @Setter
 public class LeanSqlConnector extends LeanBaseConnector implements ILeanConnector {
 
-  @HopMetadataProperty private String databaseConnectionName;
+  @LeanWidgetElement(
+      order = "10000-databaseConnectionName",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.COMBO,
+      comboSource = LeanComboSource.METADATA,
+      metadataKey = "lean-database-connection",
+      label = "Database connection",
+      toolTip = "Name of a lean-database-connection metadata element")
+  @HopMetadataProperty
+  private String databaseConnectionName;
 
-  @HopMetadataProperty private String sql;
+  @LeanWidgetElement(
+      order = "10100-sql",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.MULTI_LINE_TEXT,
+      multiLineTextHeight = 10,
+      label = "SQL",
+      toolTip = "SQL query executed against the selected database connection")
+  @HopMetadataProperty
+  private String sql;
 
   @JsonIgnore private transient ResultSet resultSet;
 
@@ -119,6 +139,10 @@ public class LeanSqlConnector extends LeanBaseConnector implements ILeanConnecto
       //
       outputDone();
 
+    } catch (LeanException e) {
+      // Row listeners (e.g. crosstab aggregation) throw LeanException mid-stream — keep the
+      // original message so editors show the real cause, not only "Couldn't stream data…".
+      throw e;
     } catch (Exception e) {
       throw new LeanException(
           "Couldn't stream data from database connection " + databaseConnectionName, e);

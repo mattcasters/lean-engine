@@ -8,7 +8,12 @@ import java.awt.font.TextLayout;
 import java.awt.geom.Rectangle2D;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.commons.lang3.StringUtils;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.hop.core.Const;
+import org.lean.core.gui.plugin.LeanWidgetType;
+import org.lean.core.gui.plugin.LeanWidgetElement;
 import org.apache.hop.core.logging.ILogChannel;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.LeanAttachment;
@@ -19,6 +24,7 @@ import org.lean.core.LeanPosition;
 import org.lean.core.LeanSize;
 import org.lean.core.LeanTextGeometry;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
 import org.lean.presentation.LeanComponentLayoutResult;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.component.LeanComponent;
@@ -29,23 +35,72 @@ import org.lean.presentation.layout.LeanRenderPage;
 import org.lean.presentation.page.LeanPage;
 import org.lean.presentation.theme.LeanTheme;
 import org.lean.render.IRenderContext;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 @Setter
 public abstract class LeanBaseComponent implements ILeanComponent {
 
   @HopMetadataProperty @JsonProperty protected String pluginId;
-  @HopMetadataProperty @JsonProperty protected String sourceConnectorName;
+
+  @LeanWidgetElement(
+      order = "01000-sourceConnectorName",
+      parentId = LeanGuiFormConstants.PARENT_BASE,
+      type = LeanWidgetType.COMBO,
+      comboSource = org.lean.core.gui.plugin.LeanComboSource.CONNECTORS,
+      label = "Source connector",
+      toolTip = "Optional data connector feeding this component")
+  @HopMetadataProperty
+  @JsonProperty
+  protected String sourceConnectorName;
+
   @HopMetadataProperty @JsonProperty protected boolean background;
   @HopMetadataProperty @JsonProperty protected boolean border;
-  @HopMetadataProperty @JsonProperty protected String themeName;
-  @HopMetadataProperty @JsonProperty protected LeanFont defaultFont;
-  @HopMetadataProperty @JsonProperty protected LeanColorRGB defaultColor;
-  @HopMetadataProperty @JsonProperty protected LeanColorRGB backGroundColor;
-  @HopMetadataProperty @JsonProperty protected LeanColorRGB borderColor;
+
+  @LeanWidgetElement(
+      order = "01100-themeName",
+      parentId = LeanGuiFormConstants.PARENT_BASE,
+      type = LeanWidgetType.COMBO,
+      comboSource = org.lean.core.gui.plugin.LeanComboSource.THEMES,
+      label = "Theme name")
+  @HopMetadataProperty
+  @JsonProperty
+  protected String themeName;
+
+  @LeanWidgetElement(
+      order = "01400-defaultFont",
+      parentId = LeanGuiFormConstants.PARENT_BASE,
+      type = LeanWidgetType.TEXT,
+      label = "Default font")
+  @HopMetadataProperty
+  @JsonProperty
+  protected LeanFont defaultFont;
+
+  @LeanWidgetElement(
+      order = "01500-defaultColor",
+      parentId = LeanGuiFormConstants.PARENT_BASE,
+      type = LeanWidgetType.TEXT,
+      label = "Default color")
+  @HopMetadataProperty
+  @JsonProperty
+  protected LeanColorRGB defaultColor;
+
+  @LeanWidgetElement(
+      order = "01300-backGroundColor",
+      parentId = LeanGuiFormConstants.PARENT_BASE,
+      type = LeanWidgetType.TEXT,
+      label = "Background color")
+  @HopMetadataProperty
+  @JsonProperty
+  protected LeanColorRGB backGroundColor;
+
+  @LeanWidgetElement(
+      order = "01200-borderColor",
+      parentId = LeanGuiFormConstants.PARENT_BASE,
+      type = LeanWidgetType.TEXT,
+      label = "Border color")
+  @HopMetadataProperty
+  @JsonProperty
+  protected LeanColorRGB borderColor;
 
   // Fields below are not serialized
   //

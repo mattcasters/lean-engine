@@ -1,5 +1,6 @@
 package org.lean.render.context;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hop.metadata.api.IHopMetadataProvider;
 import org.lean.core.exception.LeanException;
 import org.lean.presentation.LeanPresentation;
@@ -25,22 +26,30 @@ public class PresentationRenderContext extends SimpleRenderContext implements IR
   }
 
   /**
-   * @param themeName The name of the theme to look for or null if you want to use the default
+   * @param themeName The name of the theme to look for, or null/blank to use the presentation
+   *     default (form editors often save "(none)" as {@code ""})
    * @return The theme or null if none is found.
    */
   @Override
   public LeanTheme lookupTheme(String themeName) throws LeanException {
-    // If no theme name is given, them we'll use the default of the presentation
-    //
+    // null or blank → presentation default (empty string is common after Apply with theme "(none)")
     LeanTheme theme;
-    if (themeName == null) {
-      theme = presentation.getDefaultTheme();
+    if (StringUtils.isBlank(themeName)) {
+      theme = presentation != null ? presentation.getDefaultTheme() : null;
     } else {
-      theme = presentation.lookupTheme(themeName);
+      theme = presentation != null ? presentation.lookupTheme(themeName) : null;
     }
     if (theme != null) {
       return theme;
     }
-    return super.lookupTheme(themeName);
+    // Named theme not embedded on the presentation: try metadata (only when a real name was given)
+    if (StringUtils.isNotBlank(themeName)) {
+      return super.lookupTheme(themeName);
+    }
+    // Still nothing: fall back to first theme on the presentation or built-in default
+    if (presentation != null && presentation.getThemes() != null && !presentation.getThemes().isEmpty()) {
+      return presentation.getThemes().get(0);
+    }
+    return LeanTheme.getDefault();
   }
 }

@@ -1,5 +1,6 @@
 package org.lean.core;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.hop.metadata.api.HopMetadataProperty;
@@ -12,9 +13,21 @@ public class LeanColumn {
 
   @HopMetadataProperty private String headerValue;
 
-  @HopMetadataProperty private LeanHorizontalAlignment horizontalAlignment;
+  /**
+   * May be null after incomplete form/metadata saves; {@link #getHorizontalAlignment()} always
+   * returns a non-null default.
+   */
+  @Getter(AccessLevel.NONE)
+  @HopMetadataProperty
+  private LeanHorizontalAlignment horizontalAlignment;
 
-  @HopMetadataProperty private LeanVerticalAlignment verticalAlignment;
+  /**
+   * May be null after incomplete form/metadata saves; {@link #getVerticalAlignment()} always
+   * returns a non-null default.
+   */
+  @Getter(AccessLevel.NONE)
+  @HopMetadataProperty
+  private LeanVerticalAlignment verticalAlignment;
 
   @HopMetadataProperty private int width;
 
@@ -50,5 +63,13 @@ public class LeanColumn {
     this.headerValue = headerValue;
     this.horizontalAlignment = horizontalAlignment;
     this.verticalAlignment = verticalAlignment;
+  }
+
+  public LeanHorizontalAlignment getHorizontalAlignment() {
+    return horizontalAlignment != null ? horizontalAlignment : LeanHorizontalAlignment.LEFT;
+  }
+
+  public LeanVerticalAlignment getVerticalAlignment() {
+    return verticalAlignment != null ? verticalAlignment : LeanVerticalAlignment.TOP;
   }
 }

@@ -47,8 +47,68 @@ with optional **percentage** of the reference size and **pixel offset**.
 
 Circular attachment graphs are invalid; the page sorts components topologically before layout.
 
+## Browser configuration forms (`@LeanWidgetElement`)
+
+Plugin classes declare editor widgets with Lean’s `@LeanWidgetElement` next to `@HopMetadataProperty`.
+Example: `LeanLabelComponent`. Annotations are scanned into `LeanGuiRegistry` during
+`LeanEnvironment.init()`; `GuiFormSchemaBuilder` exports a UI-agnostic schema.
+
+```java
+@LeanWidgetElement(
+    order = "10000-label",
+    parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+    type = LeanWidgetType.TEXT,
+    label = "Label text",
+    tabName = "",           // optional: group fields onto separate editor tabs
+    tabTooltip = "")
+@HopMetadataProperty
+private String label;
+```
+
+Shared parent ids live in `org.lean.core.gui.form.LeanGuiFormConstants`:
+
+| Parent id | Section |
+|-----------|---------|
+| `LeanComponent-Plugin` | Plugin-specific fields |
+| `LeanComponent-Base` | Fields on `LeanBaseComponent` |
+| `LeanComponent-Wrapper` / `LeanComponent-Layout` | Shared chrome (generated) |
+
+Optional `tabName` / `tabTooltip` on the annotation (and on `GuiFormField`) let clients group
+widgets onto separate tabs within a section.
+
+### Dynamic combo sources (`LeanComboSource`)
+
+| Source | Options filled from |
+|--------|---------------------|
+| `CONNECTORS` | Presentation-local connectors + shared `connector` metadata |
+| `THEMES` | `theme` metadata names |
+| `COMPONENTS` | Component names on the current render page (layout attachments) |
+| `CONNECTOR_COLUMNS` | Output fields of the connector named by `dependsOn` (default `sourceConnectorName`) |
+| `METADATA` | Element names for `metadataKey` (e.g. `lean-database-connection`) |
+
+lean-rest binds these via `bindSelectSource()` and refreshes column options when the source
+connector combo changes.
+
+`GuiFormHtmlRenderer` emits lean-rest side-panel HTML. See lean-rest `EditPluginResource`
+(`edit/component/{id}/`, `edit/schema/component/{id}/`).
+
+Static per-plugin HTML under lean-rest has been removed; forms are **always** generated.
+
+After `mvn test -Dtest=FormEndToEndTest`, open `target/form-review/README.md` for a local
+gallery of generated schemas and form HTML previews.
+
+## Nested component editors
+
+`LeanGroupComponent.groupComponent` (`COMPONENT`) and `LeanCompositeComponent.children`
+(`LIST` + `itemKind=component`) use a **component catalog** embedded in the form schema
+(`GuiFormSchema.componentCatalog`). The lean-rest side panel builds nested name/type/layout/plugin
+fields recursively via `setNestedComponent` / `setNestedComponentList` in `lean-rest.js`.
+
 ## Known limitations (backlog)
 
 - Crosstab: subtotals, multi-level sort, configurable “Total” label
 - SVG component: centered bounds with magnification
 - DrawnItem rotation
+- `List<LeanSortMethod>` and arbitrary bean lists (column/fact/string/component kinds today)
+- Connector edit UI in lean-rest shell (schema API exists; page chrome is presentation-focused)
+- Nested layout “relative to” dropdown only lists top-level page component names

@@ -26,6 +26,9 @@ import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.ILeanRowListener;
 import org.lean.core.LeanJson;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
+import org.lean.core.gui.plugin.LeanWidgetElement;
+import org.lean.core.gui.plugin.LeanWidgetType;
 import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
 import org.lean.presentation.connector.type.LeanConnectorPlugin;
@@ -51,13 +54,37 @@ public class LeanRestConnector extends LeanBaseConnector implements ILeanConnect
   private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(30);
   private static final Duration REQUEST_TIMEOUT = Duration.ofMinutes(2);
 
-  @HopMetadataProperty private String url;
+  @LeanWidgetElement(
+      order = "10000-url",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "URL")
+  @HopMetadataProperty
+  private String url;
 
-  @HopMetadataProperty private String path;
+  @LeanWidgetElement(
+      order = "10100-path",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Path")
+  @HopMetadataProperty
+  private String path;
 
-  @HopMetadataProperty private String body;
+  @LeanWidgetElement(
+      order = "10200-body",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Request body")
+  @HopMetadataProperty
+  private String body;
 
-  @HopMetadataProperty private String rowsElement;
+  @LeanWidgetElement(
+      order = "10300-rowsElement",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Rows JSON path")
+  @HopMetadataProperty
+  private String rowsElement;
 
   @HopMetadataProperty(key = "fields")
   private List<JsonField> fields;

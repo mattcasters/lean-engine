@@ -7,6 +7,9 @@ import org.apache.hop.core.row.RowMetaBuilder;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.ILeanRowListener;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
+import org.lean.core.gui.plugin.LeanWidgetElement;
+import org.lean.core.gui.plugin.LeanWidgetType;
 import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
 import org.lean.presentation.connector.type.LeanConnectorPlugin;
@@ -27,9 +30,21 @@ import lombok.Setter;
 @Setter
 public class LeanListConnector extends LeanBaseConnector implements ILeanConnector {
 
-  @HopMetadataProperty private String columnName;
+  @LeanWidgetElement(
+      order = "10000-columnName",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Column name")
+  @HopMetadataProperty
+  private String columnName;
 
-  @HopMetadataProperty private List<String> list;
+  @LeanWidgetElement(
+      order = "10100-list",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Values")
+  @HopMetadataProperty
+  private List<String> list;
 
   public LeanListConnector() {
     super("LeanListConnector");

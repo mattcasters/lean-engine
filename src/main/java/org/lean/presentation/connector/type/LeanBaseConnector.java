@@ -2,16 +2,18 @@ package org.lean.presentation.connector.type;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.hop.core.row.IRowMeta;
-import org.apache.hop.metadata.api.HopMetadataProperty;
-import org.lean.core.ILeanRowListener;
-import org.lean.core.exception.LeanException;
-import org.lean.presentation.datacontext.IDataContext;
-
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
+import org.lean.core.gui.plugin.LeanWidgetType;
+import org.lean.core.gui.plugin.LeanWidgetElement;
+import org.apache.hop.core.row.IRowMeta;
+import org.apache.hop.metadata.api.HopMetadataProperty;
+import org.lean.core.ILeanRowListener;
+import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
+import org.lean.presentation.datacontext.IDataContext;
 
 @Getter
 @Setter
@@ -19,7 +21,16 @@ public abstract class LeanBaseConnector implements ILeanConnector {
 
   @HopMetadataProperty @JsonProperty protected String pluginId;
 
-  @HopMetadataProperty @JsonProperty protected String sourceConnectorName;
+  @LeanWidgetElement(
+      order = "01000-sourceConnectorName",
+      parentId = LeanGuiFormConstants.PARENT_BASE,
+      type = LeanWidgetType.COMBO,
+      comboSource = org.lean.core.gui.plugin.LeanComboSource.CONNECTORS,
+      label = "Source connector",
+      toolTip = "Upstream connector this transform reads from (if applicable)")
+  @HopMetadataProperty
+  @JsonProperty
+  protected String sourceConnectorName;
 
   @JsonIgnore protected List<ILeanRowListener> rowListeners;
 

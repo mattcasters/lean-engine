@@ -1,5 +1,6 @@
 package org.lean.core;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.hop.metadata.api.HopMetadataProperty;
@@ -18,12 +19,18 @@ public class LeanFact extends LeanColumn {
 
   @HopMetadataProperty private String verticalAggregationHeader;
 
-  @HopMetadataProperty private LeanHorizontalAlignment headerHorizontalAlignment;
+  @Getter(AccessLevel.NONE)
+  @HopMetadataProperty
+  private LeanHorizontalAlignment headerHorizontalAlignment;
 
-  @HopMetadataProperty private LeanVerticalAlignment headerVerticalAlignment;
+  @Getter(AccessLevel.NONE)
+  @HopMetadataProperty
+  private LeanVerticalAlignment headerVerticalAlignment;
 
   public LeanFact() {
     super();
+    headerHorizontalAlignment = LeanHorizontalAlignment.LEFT;
+    headerVerticalAlignment = LeanVerticalAlignment.TOP;
   }
 
   public LeanFact(String columnName, AggregationMethod aggregationMethod) {
@@ -52,5 +59,15 @@ public class LeanFact extends LeanColumn {
     this.verticalAggregationHeader = f.verticalAggregationHeader;
     this.headerHorizontalAlignment = f.headerHorizontalAlignment;
     this.headerVerticalAlignment = f.headerVerticalAlignment;
+  }
+
+  public LeanHorizontalAlignment getHeaderHorizontalAlignment() {
+    return headerHorizontalAlignment != null
+        ? headerHorizontalAlignment
+        : LeanHorizontalAlignment.LEFT;
+  }
+
+  public LeanVerticalAlignment getHeaderVerticalAlignment() {
+    return headerVerticalAlignment != null ? headerVerticalAlignment : LeanVerticalAlignment.TOP;
   }
 }

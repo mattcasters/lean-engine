@@ -2,6 +2,7 @@ package org.lean.presentation.datacontext;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hop.core.exception.HopException;
 import org.apache.hop.core.variables.IVariables;
 import org.apache.hop.core.variables.Variables;
@@ -39,6 +40,12 @@ public class PresentationDataContext implements IDataContext {
 
   @Override
   public LeanConnector getConnector(String name) throws LeanException {
+    // Palette-dropped charts/tables often have null/blank sourceConnectorName until configured.
+    // Never call the metadata serializer with a blank name (Hop throws).
+    if (StringUtils.isBlank(name)) {
+      return null;
+    }
+
     LeanConnector connector = presentation.getConnector(name);
     if (connector == null) {
       // Try to load it from the metadata provider.

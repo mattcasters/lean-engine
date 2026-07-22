@@ -10,18 +10,23 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.hop.core.exception.HopException;
 import org.apache.hop.core.row.IRowMeta;
 import org.apache.hop.core.row.IValueMeta;
 import org.apache.hop.core.variables.IVariables;
+import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.ILeanRowListener;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
+import org.lean.core.gui.plugin.LeanWidgetElement;
+import org.lean.core.gui.plugin.LeanWidgetType;
 import org.lean.presentation.connector.LeanConnector;
 import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
+import org.lean.presentation.connector.type.LeanConnectorPlugin;
 import org.lean.presentation.datacontext.IDataContext;
-import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Filters rows by exact string equality on field values.
@@ -31,11 +36,23 @@ import lombok.Setter;
  * (the row value must be in the set of filter values for that field).
  */
 @JsonDeserialize(as = LeanSimpleFilterConnector.class)
+@LeanConnectorPlugin(
+    id = "SimpleFilterConnector",
+    name = "Simple filter",
+    description = "Keep rows matching exact field values (AND across fields, OR within a field)")
 @Getter
 @Setter
 public class LeanSimpleFilterConnector extends LeanBaseConnector implements ILeanConnector {
 
   @JsonIgnore protected ArrayBlockingQueue<Object> finishedQueue;
+
+  @LeanWidgetElement(
+      order = "10000-filterValues",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Filter values",
+      toolTip = "Exact field/value pairs; AND across fields, OR within the same field")
+  @HopMetadataProperty
   private List<SimpleFilterValue> filterValues;
 
   public LeanSimpleFilterConnector() {

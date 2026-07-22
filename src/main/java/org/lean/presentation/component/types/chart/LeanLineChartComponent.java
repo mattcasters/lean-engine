@@ -7,12 +7,16 @@ import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.apache.hop.core.Const;
 import org.apache.hop.core.exception.HopValueException;
+import org.lean.core.gui.plugin.LeanWidgetType;
+import org.lean.core.gui.plugin.LeanWidgetElement;
 import org.apache.hop.core.row.IValueMeta;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.LeanColorRGB;
@@ -22,6 +26,7 @@ import org.lean.core.LeanTextGeometry;
 import org.lean.core.draw.DrawnContext;
 import org.lean.core.draw.DrawnItem;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
 import org.lean.presentation.LeanComponentLayoutResult;
 import org.lean.presentation.component.LeanComponent;
 import org.lean.presentation.component.type.ILeanComponent;
@@ -29,8 +34,6 @@ import org.lean.presentation.component.type.LeanComponentPlugin;
 import org.lean.presentation.layout.LeanLayoutResults;
 import org.lean.presentation.theme.LeanTheme;
 import org.lean.render.IRenderContext;
-import lombok.Getter;
-import lombok.Setter;
 
 @JsonDeserialize(as = LeanLineChartComponent.class)
 @LeanComponentPlugin(
@@ -41,7 +44,13 @@ import lombok.Setter;
 @Setter
 public class LeanLineChartComponent extends LeanBaseChartComponent implements ILeanComponent {
 
-  @HopMetadataProperty protected boolean drawingCurvedTrendLine;
+  @LeanWidgetElement(
+      order = "12000-drawingCurvedTrendLine",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Draw curved trend line?")
+  @HopMetadataProperty
+  protected boolean drawingCurvedTrendLine;
 
   public LeanLineChartComponent() {
     this((String) null);
@@ -79,6 +88,11 @@ public class LeanLineChartComponent extends LeanBaseChartComponent implements IL
     int width = componentGeometry.getWidth();
     int height = componentGeometry.getHeight();
     int tickSize = 4;
+
+    if (isIncompleteChartConfig()) {
+      renderIncompletePlaceholder(gc, componentGeometry, renderContext);
+      return;
+    }
 
     // Now get the horizontal dimension combinations
     //
@@ -358,66 +372,60 @@ public class LeanLineChartComponent extends LeanBaseChartComponent implements IL
         //
         gc.setStroke(new BasicStroke(lw, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL));
 
-        double[] xs = new double[xCoordinates.size()];
-        double[] ys = new double[yCoordinates.size()];
-        for (int i = 0; i < xCoordinates.size(); i++) {
-          xs[i] = xCoordinates.get(i);
-          ys[i] = yCoordinates.get(i);
-        }
+        // SplineInterpolator requires strictly increasing X. Preview/layout can produce
+        // out-of-order or duplicate abscissae (e.g. after re-layout at different size).
+        double[][] sorted = sortStrictlyIncreasingX(xCoordinates, yCoordinates);
+        double[] xs = sorted[0];
+        double[] ys = sorted[1];
 
-        SplineInterpolator splineInterpolator = new SplineInterpolator();
-        PolynomialSplineFunction function = splineInterpolator.interpolate(xs, ys);
+        if (xs.length < 3) {
+          // Not enough distinct X values for a cubic spline — fall back to polylines
+          drawStraightSegments(gc, xCoordinates, yCoordinates);
+        } else {
+          try {
+            SplineInterpolator splineInterpolator = new SplineInterpolator();
+            PolynomialSplineFunction function = splineInterpolator.interpolate(xs, ys);
 
-        // TODO: make the number of curve points configurable...
-        //
-        int nrValues = xCoordinates.size() * 30;
-        double[] xi = new double[nrValues];
-        xi[0] = xs[0];
-        xi[xi.length - 1] = xs[xs.length - 1];
-        double diff = xs[xs.length - 1] - xi[0];
-        double delta = diff / nrValues;
-        for (int i = 1; i < xi.length - 1; i++) {
-          xi[i] = xs[0] + delta * i;
-        }
+            // TODO: make the number of curve points configurable...
+            //
+            int nrValues = xs.length * 30;
+            double[] xi = new double[nrValues];
+            xi[0] = xs[0];
+            xi[xi.length - 1] = xs[xs.length - 1];
+            double diff = xs[xs.length - 1] - xi[0];
+            double delta = diff / nrValues;
+            for (int i = 1; i < xi.length - 1; i++) {
+              xi[i] = xs[0] + delta * i;
+            }
 
-        double lx = xs[0];
-        double ly = ys[0];
+            double lx = xs[0];
+            double ly = ys[0];
 
-        Path2D path = new Path2D.Double();
-
-        for (int i = 1; i < xi.length; i++) {
-          double yi = function.value(xi[i]);
-
-          int fromX = Math.round((float) lx);
-          int fromY = Math.round((float) ly);
-          int toX = Math.round((float) xi[i]);
-          int toY = Math.round((float) yi);
-
-          if (i == 1) {
+            Path2D path = new Path2D.Double();
             path.moveTo(lx, ly);
+
+            for (int i = 1; i < xi.length; i++) {
+              // Clamp into the spline domain [xs[0], xs[last]]
+              double xq = Math.min(xs[xs.length - 1], Math.max(xs[0], xi[i]));
+              double yi = function.value(xq);
+              path.lineTo(xq, yi);
+              lx = xq;
+              ly = yi;
+            }
+            gc.draw(path);
+          } catch (Exception e) {
+            // Any interpolation failure: still show the series as straight segments
+            drawStraightSegments(gc, xCoordinates, yCoordinates);
           }
-          path.lineTo(xi[i], yi);
-          // Shape lineShape = new Line2D.Double( lx, ly, xi[i], yi );
-          lx = xi[i];
-          ly = yi;
         }
-        gc.draw(path);
+        gc.setStroke(stroke);
 
       } else {
 
         // Draw the actual line
         //
         gc.setStroke(new BasicStroke(lw, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER));
-
-        int[] xs = new int[xCoordinates.size()];
-        int[] ys = new int[yCoordinates.size()];
-        for (int i = 0; i < xs.length; i++) {
-          xs[i] = xCoordinates.get(i).intValue();
-          ys[i] = yCoordinates.get(i).intValue();
-        }
-
-        gc.drawPolyline(xs, ys, xs.length);
-
+        drawStraightSegments(gc, xCoordinates, yCoordinates);
         gc.setStroke(stroke);
       }
 
@@ -450,5 +458,65 @@ public class LeanLineChartComponent extends LeanBaseChartComponent implements IL
                 new DrawnContext(seriesLabel)));
       }
     }
+  }
+
+  /**
+   * Sort series points by ascending X and collapse duplicate X values (average Y) so that {@link
+   * SplineInterpolator} does not throw {@code NonMonotonicSequenceException}.
+   *
+   * @return {@code [xs, ys]} with length &gt;= 0 and strictly increasing {@code xs}
+   */
+  private static double[][] sortStrictlyIncreasingX(
+      List<Double> xCoordinates, List<Double> yCoordinates) {
+    int n = xCoordinates.size();
+    Integer[] order = new Integer[n];
+    for (int i = 0; i < n; i++) {
+      order[i] = i;
+    }
+    java.util.Arrays.sort(
+        order, (a, b) -> Double.compare(xCoordinates.get(a), xCoordinates.get(b)));
+
+    List<Double> xs = new ArrayList<>();
+    List<Double> ys = new ArrayList<>();
+    double lastX = Double.NaN;
+    for (int i = 0; i < order.length; i++) {
+      int idx = order[i];
+      double x = xCoordinates.get(idx);
+      double y = yCoordinates.get(idx);
+      if (xs.isEmpty()) {
+        xs.add(x);
+        ys.add(y);
+        lastX = x;
+      } else if (x > lastX) {
+        xs.add(x);
+        ys.add(y);
+        lastX = x;
+      } else if (x == lastX) {
+        // Keep a single knot for this X (average Y)
+        int last = ys.size() - 1;
+        ys.set(last, (ys.get(last) + y) / 2.0);
+      }
+    }
+    double[] xa = new double[xs.size()];
+    double[] ya = new double[ys.size()];
+    for (int i = 0; i < xs.size(); i++) {
+      xa[i] = xs.get(i);
+      ya[i] = ys.get(i);
+    }
+    return new double[][] {xa, ya};
+  }
+
+  private static void drawStraightSegments(
+      SVGGraphics2D gc, List<Double> xCoordinates, List<Double> yCoordinates) {
+    if (xCoordinates == null || xCoordinates.size() < 2) {
+      return;
+    }
+    int[] xs = new int[xCoordinates.size()];
+    int[] ys = new int[yCoordinates.size()];
+    for (int i = 0; i < xs.length; i++) {
+      xs[i] = xCoordinates.get(i).intValue();
+      ys[i] = yCoordinates.get(i).intValue();
+    }
+    gc.drawPolyline(xs, ys, xs.length);
   }
 }

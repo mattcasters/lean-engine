@@ -1,8 +1,19 @@
 package org.lean.presentation.component.types.crosstab;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.hop.core.exception.HopValueException;
+import org.lean.core.gui.plugin.LeanWidgetType;
+import org.lean.core.gui.plugin.LeanWidgetElement;
 import org.apache.hop.core.row.IRowMeta;
 import org.apache.hop.core.row.IValueMeta;
 import org.apache.hop.core.row.value.ValueMetaInteger;
@@ -21,6 +32,7 @@ import org.lean.core.draw.DrawnContext;
 import org.lean.core.draw.DrawnItem;
 import org.lean.core.draw.DrawnItem.DrawnItemType;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
 import org.lean.presentation.LeanComponentLayoutResult;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.component.LeanComponent;
@@ -32,16 +44,6 @@ import org.lean.presentation.layout.LeanLayoutResults;
 import org.lean.presentation.layout.LeanRenderPage;
 import org.lean.presentation.page.LeanPage;
 import org.lean.render.IRenderContext;
-
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import lombok.Getter;
-import lombok.Setter;
 
 @JsonDeserialize(as = LeanCrosstabComponent.class)
 @LeanComponentPlugin(
@@ -59,17 +61,53 @@ public class LeanCrosstabComponent extends LeanBaseAggregatingComponent implemen
   public static final String DATA_START_ROW = "start_row";
   public static final String DATA_END_ROW = "end_row";
 
-  @HopMetadataProperty private int horizontalMargin;
+  @LeanWidgetElement(
+      order = "10000-horizontalMargin",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Horizontal margin")
+  @HopMetadataProperty
+  private int horizontalMargin;
 
-  @HopMetadataProperty private int verticalMargin;
+  @LeanWidgetElement(
+      order = "10100-verticalMargin",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Vertical margin")
+  @HopMetadataProperty
+  private int verticalMargin;
 
-  @HopMetadataProperty private boolean evenHeights;
+  @LeanWidgetElement(
+      order = "10200-evenHeights",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Even heights?")
+  @HopMetadataProperty
+  private boolean evenHeights;
 
-  @HopMetadataProperty private boolean headerOnEveryPage;
+  @LeanWidgetElement(
+      order = "10300-headerOnEveryPage",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Header on every page?")
+  @HopMetadataProperty
+  private boolean headerOnEveryPage;
 
-  @HopMetadataProperty private boolean showingHorizontalSubtotals;
+  @LeanWidgetElement(
+      order = "10400-showingHorizontalSubtotals",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Show horizontal subtotals?")
+  @HopMetadataProperty
+  private boolean showingHorizontalSubtotals;
 
-  @HopMetadataProperty private boolean showingVerticalSubtotals;
+  @LeanWidgetElement(
+      order = "10500-showingVerticalSubtotals",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Show vertical subtotals?")
+  @HopMetadataProperty
+  private boolean showingVerticalSubtotals;
 
   public LeanCrosstabComponent() {
     super("LeanCrosstabComponent");
@@ -108,9 +146,15 @@ public class LeanCrosstabComponent extends LeanBaseAggregatingComponent implemen
       LeanLayoutResults results)
       throws LeanException {
 
+    // Palette-dropped / incomplete crosstabs: skip data load so the page still renders
+    if (org.apache.commons.lang3.StringUtils.isBlank(sourceConnectorName)) {
+      results.addDataSet(component, DATA_CROSSTAB_DETAILS, new CrosstabDetails());
+      return;
+    }
     LeanConnector connector = dataContext.getConnector(sourceConnectorName);
     if (connector == null) {
-      throw new LeanException("Unable to find connector '" + sourceConnectorName + "'");
+      results.addDataSet(component, DATA_CROSSTAB_DETAILS, new CrosstabDetails());
+      return;
     }
 
     // Get the rows
@@ -1068,7 +1112,13 @@ public class LeanCrosstabComponent extends LeanBaseAggregatingComponent implemen
     int positionX;
     int positionY;
 
-    switch (verticalAlignment) {
+    // Null-safe: incomplete form/metadata saves can leave alignments unset
+    LeanVerticalAlignment vAlign =
+        verticalAlignment != null ? verticalAlignment : LeanVerticalAlignment.TOP;
+    LeanHorizontalAlignment hAlign =
+        horizontalAlignment != null ? horizontalAlignment : LeanHorizontalAlignment.LEFT;
+
+    switch (vAlign) {
       case TOP:
         positionY = y + textGeometry.getHeight() + verticalMargin;
         break;
@@ -1079,10 +1129,10 @@ public class LeanCrosstabComponent extends LeanBaseAggregatingComponent implemen
         positionY = y + cellHeight / 2 + textGeometry.getHeight() / 2;
         break;
       default:
-        throw new LeanException("Unsupported vertical alignment : " + verticalAlignment);
+        throw new LeanException("Unsupported vertical alignment : " + vAlign);
     }
 
-    switch (horizontalAlignment) {
+    switch (hAlign) {
       case LEFT:
         positionX = x + textGeometry.getOffsetX() + horizontalMargin;
         break;
@@ -1093,7 +1143,7 @@ public class LeanCrosstabComponent extends LeanBaseAggregatingComponent implemen
         positionX = x + (cellWidth - textGeometry.getWidth()) / 2;
         break;
       default:
-        throw new LeanException("Unsupported horizontal alignment : " + horizontalAlignment);
+        throw new LeanException("Unsupported horizontal alignment : " + hAlign);
     }
 
     Stroke baseStroke = gc.getStroke();

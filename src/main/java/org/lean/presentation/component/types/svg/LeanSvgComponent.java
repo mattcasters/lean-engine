@@ -1,7 +1,11 @@
 package org.lean.presentation.component.types.svg;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.lean.core.gui.plugin.LeanWidgetType;
+import org.lean.core.gui.plugin.LeanWidgetElement;
 import org.apache.hop.core.svg.HopSvgGraphics2D;
 import org.apache.hop.core.svg.SvgCache;
 import org.apache.hop.core.svg.SvgCacheEntry;
@@ -12,6 +16,7 @@ import org.lean.core.LeanGeometry;
 import org.lean.core.LeanPosition;
 import org.lean.core.LeanSize;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
 import org.lean.presentation.LeanComponentLayoutResult;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.component.LeanComponent;
@@ -25,8 +30,6 @@ import org.lean.presentation.layout.LeanRenderPage;
 import org.lean.presentation.page.LeanPage;
 import org.lean.render.IRenderContext;
 import org.w3c.dom.Node;
-import lombok.Getter;
-import lombok.Setter;
 
 @JsonDeserialize(as = LeanSvgComponent.class)
 @LeanComponentPlugin(id = "LeanSvgComponent", name = "SVG", description = "An SVG component")
@@ -36,9 +39,21 @@ public class LeanSvgComponent extends LeanBaseComponent implements ILeanComponen
 
   public static final String DATA_SVG_DETAILS = "SVG Details";
 
-  @HopMetadataProperty private String filename;
+  @LeanWidgetElement(
+      order = "10000-filename",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.FILENAME,
+      label = "SVG filename")
+  @HopMetadataProperty
+  private String filename;
 
-  @HopMetadataProperty private ScaleType scaleType;
+  @LeanWidgetElement(
+      order = "10100-scaleType",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.COMBO,
+      label = "Scale type")
+  @HopMetadataProperty
+  private ScaleType scaleType;
 
   public LeanSvgComponent() {
     super("LeanSvgComponent");

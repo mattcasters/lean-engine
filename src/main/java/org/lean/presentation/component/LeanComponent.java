@@ -120,6 +120,15 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
       throws LeanException {
     component.setLogChannel(log);
 
+    // Header/footer path: apply presentation default when theme is unset/blank
+    if (component != null
+        && (component.getThemeName() == null || component.getThemeName().isBlank())
+        && leanPresentation != null
+        && leanPresentation.getDefaultThemeName() != null
+        && !leanPresentation.getDefaultThemeName().isBlank()) {
+      component.setThemeName(leanPresentation.getDefaultThemeName());
+    }
+
     // Call the process source data listeners...
     //
     for (IProcessSourceDataListener listener : processSourceDataListeners) {
@@ -169,13 +178,16 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
   }
 
   /**
-   * This throws this component on a presentation with one page with the given size, renders it
+   * Render this component alone on a fresh in-memory presentation: single page (no header/footer),
+   * given size, full-page layout, with the supplied connectors and themes. Used for
+   * property-editor previews.
    *
-   * @param width
-   * @param height
-   * @param connectors The connectors to use to make this component work
-   * @param themes The themes to reference
-   * @return
+   * @param width page width in pixels
+   * @param height page height in pixels
+   * @param connectors connectors available to the component (copied)
+   * @param themes themes available; if empty, {@link LeanTheme#getDefault()} is used
+   * @param metadataProvider metadata (shared connectors / themes can still be resolved)
+   * @return SVG XML of the rendered page
    */
   public String getSvgXml(
       int width,
@@ -184,37 +196,149 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
       List<LeanTheme> themes,
       IHopMetadataProvider metadataProvider)
       throws LeanException {
+    return getSvgXml(width, height, connectors, themes, metadataProvider, null);
+  }
 
+  /**
+   * Same as {@link #getSvgXml(int, int, List, List, IHopMetadataProvider)} but when {@code
+   * colorSourcePresentation} is provided, a full layout+render of that presentation is run first
+   * so chart series colors ({@code getStableColor}) match the order used on the real page.
+   */
+  public String getSvgXml(
+      int width,
+      int height,
+      List<LeanConnector> connectors,
+      List<LeanTheme> themes,
+      IHopMetadataProvider metadataProvider,
+      LeanPresentation colorSourcePresentation)
+      throws LeanException {
+
+    LoggingObject loggingObject = new LoggingObject("componentPreview");
+
+    // Pre-warm stable series-color maps from the full presentation (same theme discovery order)
+    org.lean.render.context.PresentationRenderContext warmContext = null;
+    if (colorSourcePresentation != null) {
+      try {
+        warmContext =
+            new org.lean.render.context.PresentationRenderContext(
+                colorSourcePresentation, metadataProvider);
+        if (colorSourcePresentation.getThemes() != null) {
+          warmContext.setThemes(new ArrayList<>(colorSourcePresentation.getThemes()));
+        }
+        LeanLayoutResults seedResults =
+            colorSourcePresentation.doLayout(
+                loggingObject, warmContext, metadataProvider, Collections.emptyList());
+        colorSourcePresentation.render(seedResults, metadataProvider, warmContext);
+      } catch (Exception e) {
+        // Preview still works without perfect color matching
+        warmContext = null;
+      }
+    }
+
+    // --- build a throwaway presentation (never saved) ---
     LeanPresentation presentation = new LeanPresentation();
-    presentation.setName(name);
-    LeanPage page = new LeanPage(width, height, 0, 0, 0, 0);
+    presentation.setName("preview:" + (name != null ? name : "component"));
+    presentation.setHeader(null);
+    presentation.setFooter(null);
+    presentation.setPages(new ArrayList<>());
+    presentation.setConnectors(new ArrayList<>());
+    presentation.setThemes(new ArrayList<>());
+    presentation.setInteractions(new ArrayList<>());
+
+    // Single page, no margins — page size is the preview canvas
+    int pageW = Math.max(1, width);
+    int pageH = Math.max(1, height);
+    LeanPage page = new LeanPage(pageW, pageH, 0, 0, 0, 0);
+    page.setHeader(false);
+    page.setFooter(false);
     presentation.getPages().add(page);
-    presentation.getConnectors().addAll(connectors);
 
-    // Make a copy
-    // Position on the top left
-    //
-    LeanComponent c = new LeanComponent(this);
-    c.setLayout(LeanLayout.topLeftPage());
+    // Connectors (deep copy so streaming state is isolated)
+    if (connectors != null) {
+      for (LeanConnector connector : connectors) {
+        if (connector != null) {
+          presentation.getConnectors().add(new LeanConnector(connector));
+        }
+      }
+    }
 
-    page.getComponents().add(c);
+    // Themes: prefer source presentation default, then provided list, then built-in Default
+    List<LeanTheme> themeList = new ArrayList<>();
+    String preferredDefaultName =
+        colorSourcePresentation != null ? colorSourcePresentation.getDefaultThemeName() : null;
+    if (themes != null) {
+      for (LeanTheme theme : themes) {
+        if (theme != null) {
+          themeList.add(theme);
+        }
+      }
+    }
+    if (themeList.isEmpty()) {
+      themeList.add(LeanTheme.getDefault());
+    }
+    // Ensure preferred default is first so presentation defaultThemeName matches real page
+    if (preferredDefaultName != null && !preferredDefaultName.isBlank()) {
+      themeList.sort(
+          (a, b) -> {
+            boolean aDef = preferredDefaultName.equals(a.getName());
+            boolean bDef = preferredDefaultName.equals(b.getName());
+            if (aDef == bDef) {
+              return 0;
+            }
+            return aDef ? -1 : 1;
+          });
+    }
+    presentation.setThemes(themeList);
+    LeanTheme primary = themeList.get(0);
+    if (primary.getName() == null || primary.getName().isEmpty()) {
+      primary.setName(org.lean.core.Constants.DEFAULT_THEME_NAME);
+    }
+    presentation.setDefaultThemeName(
+        preferredDefaultName != null && !preferredDefaultName.isBlank()
+            ? preferredDefaultName
+            : primary.getName());
 
-    IRenderContext renderContext = new SimpleRenderContext(width, height, themes, metadataProvider);
-    LoggingObject loggingObject = new LoggingObject("componentRender");
+    // Component copy: fill the preview page (ignore original relative layout)
+    LeanComponent previewComponent = new LeanComponent(this);
+    previewComponent.setLayout(LeanLayout.fullPage());
+    if (previewComponent.getComponent() != null) {
+      // Keep explicit theme; otherwise use the same default as the source presentation
+      String themeName = previewComponent.getComponent().getThemeName();
+      if (themeName == null || themeName.isEmpty()) {
+        previewComponent.getComponent().setThemeName(presentation.getDefaultThemeName());
+      }
+    }
+    page.getComponents().add(previewComponent);
 
-    // We don't pass in any new parameters
-    //
+    // Layout + render; reuse warmed color maps so series colors match the full page
+    org.lean.render.context.PresentationRenderContext renderContext =
+        new org.lean.render.context.PresentationRenderContext(presentation, metadataProvider);
+    renderContext.setThemes(new ArrayList<>(themeList));
+    if (warmContext != null) {
+      // Copy stable-color assignment state from full presentation render
+      if (warmContext.getThemeValueColorMap() != null) {
+        java.util.Map<String, java.util.Map<String, Integer>> copy = new java.util.HashMap<>();
+        for (java.util.Map.Entry<String, java.util.Map<String, Integer>> e :
+            warmContext.getThemeValueColorMap().entrySet()) {
+          copy.put(e.getKey(), new java.util.HashMap<>(e.getValue()));
+        }
+        renderContext.setThemeValueColorMap(copy);
+      }
+      if (warmContext.getThemeColorIndexMap() != null) {
+        renderContext.setThemeColorIndexMap(
+            new java.util.HashMap<>(warmContext.getThemeColorIndexMap()));
+      }
+    }
+
     LeanLayoutResults results =
         presentation.doLayout(
             loggingObject, renderContext, metadataProvider, Collections.emptyList());
-    presentation.render(results, metadataProvider);
+    presentation.render(results, metadataProvider, renderContext);
 
-    if (results.getRenderPages().size() == 0) {
-      throw new LeanException("No output pages generated");
+    if (results.getRenderPages().isEmpty()) {
+      throw new LeanException("Component preview produced no render pages");
     }
-    LeanRenderPage renderPage = results.getRenderPages().get(0);
-
-    return renderPage.getSvgXml();
+    return results.getRenderPages().get(0).getSvgXml();
   }
 
 

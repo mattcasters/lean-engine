@@ -10,6 +10,9 @@ import org.lean.core.LeanPosition;
 import org.lean.core.LeanSize;
 import org.lean.core.LeanSortMethod;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
+import org.lean.core.gui.plugin.LeanWidgetElement;
+import org.lean.core.gui.plugin.LeanWidgetType;
 import org.lean.presentation.LeanComponentLayoutResult;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.component.LeanComponent;
@@ -70,15 +73,40 @@ public class LeanGroupComponent extends LeanBaseComponent implements ILeanCompon
 
   public static final String DATA_GROUP_DETAILS = "DATA_GROUP_DETAILS";
 
-  @HopMetadataProperty private List<LeanColumn> columnSelection;
+  @LeanWidgetElement(
+      order = "10000-columnSelection",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Group columns")
+  @HopMetadataProperty
+  private List<LeanColumn> columnSelection;
 
   @HopMetadataProperty private List<LeanSortMethod> columnSorts;
 
-  @HopMetadataProperty private boolean distinctSelection;
+  @LeanWidgetElement(
+      order = "10200-distinctSelection",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Distinct selection?")
+  @HopMetadataProperty
+  private boolean distinctSelection;
 
-  @HopMetadataProperty private LeanComponent groupComponent;
+  @LeanWidgetElement(
+      order = "10300-groupComponent",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Group component",
+      toolTip = "The nested component rendered once per group key")
+  @HopMetadataProperty
+  private LeanComponent groupComponent;
 
-  @HopMetadataProperty private int verticalMargin;
+  @LeanWidgetElement(
+      order = "10400-verticalMargin",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Vertical margin between groups")
+  @HopMetadataProperty
+  private int verticalMargin;
 
   public LeanGroupComponent() {
     super("LeanGroupComponent");
@@ -150,9 +178,14 @@ public class LeanGroupComponent extends LeanBaseComponent implements ILeanCompon
 
     GroupDetails details = new GroupDetails();
 
+    if (org.apache.commons.lang3.StringUtils.isBlank(sourceConnectorName)) {
+      results.addDataSet(component, DATA_GROUP_DETAILS, details);
+      return;
+    }
     LeanConnector connector = dataContext.getConnector(sourceConnectorName);
     if (connector == null) {
-      throw new LeanException("Unable to find connector '" + sourceConnectorName + "'");
+      results.addDataSet(component, DATA_GROUP_DETAILS, details);
+      return;
     }
 
     List<ILeanConnector> connectors = new ArrayList<>();

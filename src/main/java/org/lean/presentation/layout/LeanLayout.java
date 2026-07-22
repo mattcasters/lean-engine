@@ -55,6 +55,13 @@ public class LeanLayout {
     return layout;
   }
 
+  public static LeanLayout fullPage() {
+    LeanLayout layout = topLeftPage();
+    layout.right = new LeanAttachment(null, 0, 0, LeanAttachment.Alignment.RIGHT);
+    layout.bottom = new LeanAttachment(null, 0, 0, LeanAttachment.Alignment.BOTTOM);
+    return layout;
+  }
+
   public static LeanLayout under(String otherComponent, boolean spanPageWidth) {
     LeanLayout layout = new LeanLayout();
     layout.left = new LeanAttachment(otherComponent, 0, 0, LeanAttachment.Alignment.LEFT);

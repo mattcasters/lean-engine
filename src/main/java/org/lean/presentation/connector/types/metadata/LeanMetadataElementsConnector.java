@@ -12,6 +12,9 @@ import org.apache.hop.metadata.api.IHopMetadataProvider;
 import org.apache.hop.metadata.api.IHopMetadataSerializer;
 import org.lean.core.ILeanRowListener;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
+import org.lean.core.gui.plugin.LeanWidgetElement;
+import org.lean.core.gui.plugin.LeanWidgetType;
 import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
 import org.lean.presentation.connector.type.LeanConnectorPlugin;
@@ -28,7 +31,14 @@ import lombok.Setter;
 @Setter
 public class LeanMetadataElementsConnector extends LeanBaseConnector implements ILeanConnector {
 
-  @HopMetadataProperty private String elementKey;
+  @LeanWidgetElement(
+      order = "10000-elementKey",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Metadata type key",
+      toolTip = "Hop metadata key (e.g. presentation, theme, lean-database-connection)")
+  @HopMetadataProperty
+  private String elementKey;
 
   public LeanMetadataElementsConnector() {
     super("MetadataElementsConnector");

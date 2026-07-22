@@ -7,6 +7,9 @@ import org.lean.core.LeanGeometry;
 import org.lean.core.LeanPosition;
 import org.lean.core.LeanSize;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
+import org.lean.core.gui.plugin.LeanWidgetElement;
+import org.lean.core.gui.plugin.LeanWidgetType;
 import org.lean.presentation.LeanComponentLayoutResult;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.component.LeanComponent;
@@ -60,7 +63,14 @@ public class LeanCompositeComponent extends LeanBaseComponent implements ILeanCo
 
   public static final String DATA_COMPOSITE_DETAILS = "DATA_COMPOSITE_DETAILS";
 
-  @HopMetadataProperty private List<LeanComponent> children;
+  @LeanWidgetElement(
+      order = "10000-children",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Child components",
+      toolTip = "Components nested inside this composite")
+  @HopMetadataProperty
+  private List<LeanComponent> children;
 
   public LeanCompositeComponent() {
     super("LeanCompositeComponent");

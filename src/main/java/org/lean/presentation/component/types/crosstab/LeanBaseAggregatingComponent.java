@@ -1,21 +1,6 @@
 package org.lean.presentation.component.types.crosstab;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.hop.core.exception.HopException;
-import org.apache.hop.core.row.IRowMeta;
-import org.apache.hop.core.row.IValueMeta;
-import org.apache.hop.metadata.api.HopMetadataProperty;
-import org.lean.core.AggregationMethod;
-import org.lean.core.LeanColorRGB;
-import org.lean.core.LeanDimension;
-import org.lean.core.LeanFact;
-import org.lean.core.LeanFont;
-import org.lean.core.exception.LeanException;
-import org.lean.presentation.component.type.ILeanComponent;
-import org.lean.presentation.component.type.LeanBaseComponent;
-import org.lean.presentation.theme.LeanTheme;
-import org.lean.render.IRenderContext;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +12,23 @@ import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.hop.core.exception.HopException;
+import org.lean.core.gui.plugin.LeanWidgetType;
+import org.lean.core.gui.plugin.LeanWidgetElement;
+import org.apache.hop.core.row.IRowMeta;
+import org.apache.hop.core.row.IValueMeta;
+import org.apache.hop.metadata.api.HopMetadataProperty;
+import org.lean.core.AggregationMethod;
+import org.lean.core.LeanColorRGB;
+import org.lean.core.LeanDimension;
+import org.lean.core.LeanFact;
+import org.lean.core.LeanFont;
+import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
+import org.lean.presentation.component.type.ILeanComponent;
+import org.lean.presentation.component.type.LeanBaseComponent;
+import org.lean.presentation.theme.LeanTheme;
+import org.lean.render.IRenderContext;
 
 @Getter
 @Setter
@@ -35,30 +37,128 @@ public abstract class LeanBaseAggregatingComponent extends LeanBaseComponent
 
   public static final String GRANT_TOTAL_STRING = "___!GrandTotal!___";
 
-  @HopMetadataProperty protected List<LeanDimension> horizontalDimensions;
+  @LeanWidgetElement(
+      order = "09000-horizontalDimensions",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Horizontal dimensions")
+  @HopMetadataProperty
+  protected List<LeanDimension> horizontalDimensions;
 
-  @HopMetadataProperty protected List<LeanDimension> verticalDimensions;
+  @LeanWidgetElement(
+      order = "09100-verticalDimensions",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Vertical dimensions")
+  @HopMetadataProperty
+  protected List<LeanDimension> verticalDimensions;
 
-  @HopMetadataProperty protected List<LeanFact> facts;
+  @LeanWidgetElement(
+      order = "09200-facts",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Facts")
+  @HopMetadataProperty
+  protected List<LeanFact> facts;
 
-  @HopMetadataProperty protected boolean showingHorizontalTotals;
+  @LeanWidgetElement(
+      order = "09300-showingHorizontalTotals",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Show horizontal totals?")
+  @HopMetadataProperty
+  protected boolean showingHorizontalTotals;
 
-  @HopMetadataProperty protected boolean showingVerticalTotals;
+  @LeanWidgetElement(
+      order = "09400-showingVerticalTotals",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Show vertical totals?")
+  @HopMetadataProperty
+  protected boolean showingVerticalTotals;
 
-  @HopMetadataProperty private LeanFont horizontalDimensionsFont;
-  @HopMetadataProperty private LeanColorRGB horizontalDimensionsColor;
-  @HopMetadataProperty private LeanFont verticalDimensionsFont;
-  @HopMetadataProperty private LeanColorRGB verticalDimensionsColor;
+  @LeanWidgetElement(
+      order = "09500-horizontalDimensionsFont",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Horizontal dimensions font")
+  @HopMetadataProperty
+  private LeanFont horizontalDimensionsFont;
+
+  @LeanWidgetElement(
+      order = "09510-horizontalDimensionsColor",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Horizontal dimensions color")
+  @HopMetadataProperty
+  private LeanColorRGB horizontalDimensionsColor;
+
+  @LeanWidgetElement(
+      order = "09600-verticalDimensionsFont",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Vertical dimensions font")
+  @HopMetadataProperty
+  private LeanFont verticalDimensionsFont;
+
+  @LeanWidgetElement(
+      order = "09610-verticalDimensionsColor",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Vertical dimensions color")
+  @HopMetadataProperty
+  private LeanColorRGB verticalDimensionsColor;
 
   // Fields below are used to calculate.
   // Always make copies if you need to calculate the same component more than once.
   //
-  @HopMetadataProperty private LeanFont factsFont;
-  @HopMetadataProperty private LeanColorRGB factsColor;
-  @HopMetadataProperty private LeanFont titleFont;
-  @HopMetadataProperty private LeanColorRGB titleColor;
-  @HopMetadataProperty private LeanColorRGB gridColor;
-  @HopMetadataProperty private LeanColorRGB axisColor;
+  @LeanWidgetElement(
+      order = "09700-factsFont",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Facts font")
+  @HopMetadataProperty
+  private LeanFont factsFont;
+
+  @LeanWidgetElement(
+      order = "09710-factsColor",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Facts color")
+  @HopMetadataProperty
+  private LeanColorRGB factsColor;
+
+  @LeanWidgetElement(
+      order = "09800-titleFont",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Title font")
+  @HopMetadataProperty
+  private LeanFont titleFont;
+
+  @LeanWidgetElement(
+      order = "09810-titleColor",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Title color")
+  @HopMetadataProperty
+  private LeanColorRGB titleColor;
+
+  @LeanWidgetElement(
+      order = "09900-gridColor",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Grid color")
+  @HopMetadataProperty
+  private LeanColorRGB gridColor;
+
+  @LeanWidgetElement(
+      order = "09910-axisColor",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Axis color")
+  @HopMetadataProperty
+  private LeanColorRGB axisColor;
 
   @JsonIgnore protected transient List<Integer> horizontalDimensionIndexes;
   @JsonIgnore protected transient List<Integer> verticalDimensionIndexes;

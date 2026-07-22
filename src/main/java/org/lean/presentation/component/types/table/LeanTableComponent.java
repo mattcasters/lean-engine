@@ -5,10 +5,14 @@ import java.awt.BasicStroke;
 import java.awt.Stroke;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hop.core.RowMetaAndData;
 import org.apache.hop.core.exception.HopValueException;
+import org.lean.core.gui.plugin.LeanWidgetType;
+import org.lean.core.gui.plugin.LeanWidgetElement;
 import org.apache.hop.core.row.IRowMeta;
 import org.apache.hop.core.row.IValueMeta;
 import org.apache.hop.core.row.RowMeta;
@@ -24,6 +28,7 @@ import org.lean.core.LeanTextGeometry;
 import org.lean.core.draw.DrawnContext;
 import org.lean.core.draw.DrawnItem;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
 import org.lean.presentation.LeanComponentLayoutResult;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.component.LeanComponent;
@@ -37,8 +42,6 @@ import org.lean.presentation.layout.LeanRenderPage;
 import org.lean.presentation.page.LeanPage;
 import org.lean.presentation.theme.LeanTheme;
 import org.lean.render.IRenderContext;
-import lombok.Getter;
-import lombok.Setter;
 
 @JsonDeserialize(as = LeanTableComponent.class)
 @LeanComponentPlugin(id = "LeanTableComponent", name = "Table", description = "A table component")
@@ -50,25 +53,85 @@ public class LeanTableComponent extends LeanBaseComponent implements ILeanCompon
   private static final String DATA_START_ROW = "DATA_START_ROW";
   private static final String DATA_END_ROW = "DATA_END_ROW";
 
-  @HopMetadataProperty private List<LeanColumn> columnSelection;
+  @LeanWidgetElement(
+      order = "10000-columnSelection",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Column selection")
+  @HopMetadataProperty
+  private List<LeanColumn> columnSelection;
 
-  @HopMetadataProperty private LeanColorRGB gridColor;
+  @LeanWidgetElement(
+      order = "10100-horizontalMargin",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Horizontal margin")
+  @HopMetadataProperty
+  private int horizontalMargin;
 
-  @HopMetadataProperty private LeanColorRGB headerBackGroundColor;
+  @LeanWidgetElement(
+      order = "10200-verticalMargin",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Vertical margin")
+  @HopMetadataProperty
+  private int verticalMargin;
 
-  @HopMetadataProperty private int horizontalMargin;
+  @LeanWidgetElement(
+      order = "10300-evenHeights",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Even heights?")
+  @HopMetadataProperty
+  private boolean evenHeights;
 
-  @HopMetadataProperty private int verticalMargin;
+  @LeanWidgetElement(
+      order = "10400-header",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Show header?")
+  @HopMetadataProperty
+  private boolean header;
 
-  @HopMetadataProperty private boolean evenHeights;
+  @LeanWidgetElement(
+      order = "10500-headerOnEveryPage",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Header on every page?")
+  @HopMetadataProperty
+  private boolean headerOnEveryPage;
 
-    @HopMetadataProperty private boolean headerOnEveryPage;
+  @LeanWidgetElement(
+      order = "10600-gridLineWidth",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Grid line width")
+  @HopMetadataProperty
+  private String gridLineWidth;
 
-  @HopMetadataProperty private boolean header;
+  @LeanWidgetElement(
+      order = "10700-headerFont",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Header font")
+  @HopMetadataProperty
+  private LeanFont headerFont;
 
-  @HopMetadataProperty private LeanFont headerFont;
+  @LeanWidgetElement(
+      order = "10800-gridColor",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Grid color")
+  @HopMetadataProperty
+  private LeanColorRGB gridColor;
 
-  @HopMetadataProperty private String gridLineWidth;
+  @LeanWidgetElement(
+      order = "10900-headerBackGroundColor",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Header background color")
+  @HopMetadataProperty
+  private LeanColorRGB headerBackGroundColor;
 
   public LeanTableComponent() {
     super("LeanTableComponent");
@@ -113,9 +176,15 @@ public class LeanTableComponent extends LeanBaseComponent implements ILeanCompon
       throws LeanException {
     TableDetails details = new TableDetails();
 
+    // Palette-dropped / incomplete tables: leave empty so layout/render still succeed
+    if (org.apache.commons.lang3.StringUtils.isBlank(sourceConnectorName)) {
+      results.addDataSet(component, DATA_TABLE_DETAILS, details);
+      return;
+    }
     LeanConnector connector = dataContext.getConnector(sourceConnectorName);
     if (connector == null) {
-      throw new LeanException("Unable to find connector '" + sourceConnectorName + "'");
+      results.addDataSet(component, DATA_TABLE_DETAILS, details);
+      return;
     }
 
     // Get the rows
@@ -206,15 +275,15 @@ public class LeanTableComponent extends LeanBaseComponent implements ILeanCompon
 
     // In case we have no specified columns, we take all the input data...
     //
-    if (columnSelection.size() == 0) {
+    if (columnSelection.size() == 0
+        && org.apache.commons.lang3.StringUtils.isNotBlank(sourceConnectorName)) {
       LeanConnector connector = dataContext.getConnector(sourceConnectorName);
-      if (connector == null) {
-        throw new LeanException("Unable to find connector '" + sourceConnectorName + "'");
-      }
-      IRowMeta inputFields = connector.getConnector().describeOutput(dataContext);
-      for (IValueMeta inputField : inputFields.getValueMetaList()) {
-        LeanColumn column = new LeanColumn(inputField.getName());
-        columnSelection.add(column);
+      if (connector != null) {
+        IRowMeta inputFields = connector.getConnector().describeOutput(dataContext);
+        for (IValueMeta inputField : inputFields.getValueMetaList()) {
+          LeanColumn column = new LeanColumn(inputField.getName());
+          columnSelection.add(column);
+        }
       }
     }
 

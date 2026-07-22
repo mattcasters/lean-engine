@@ -1,14 +1,23 @@
 package org.lean.presentation.component.types.image;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.awt.geom.AffineTransform;
+import java.io.IOException;
+import java.net.URL;
+import javax.imageio.ImageIO;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hop.core.Const;
+import org.lean.core.gui.plugin.LeanWidgetType;
+import org.lean.core.gui.plugin.LeanWidgetElement;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.LeanGeometry;
 import org.lean.core.LeanPosition;
 import org.lean.core.LeanSize;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
 import org.lean.presentation.LeanComponentLayoutResult;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.component.LeanComponent;
@@ -20,13 +29,6 @@ import org.lean.presentation.layout.LeanLayoutResults;
 import org.lean.presentation.page.LeanPage;
 import org.lean.render.IRenderContext;
 
-import javax.imageio.ImageIO;
-import java.awt.geom.AffineTransform;
-import java.io.IOException;
-import java.net.URL;
-import lombok.Getter;
-import lombok.Setter;
-
 @JsonDeserialize(as = LeanImageComponent.class)
 @LeanComponentPlugin(id = "LeanImageComponent", name = "Image", description = "An image component")
 @Getter
@@ -35,9 +37,22 @@ public class LeanImageComponent extends LeanBaseComponent implements ILeanCompon
 
   public static final String DATA_IMAGE_DETAILS = "Image Details";
 
-  @HopMetadataProperty private String filename;
+  @LeanWidgetElement(
+      order = "10000-filename",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.FILENAME,
+      label = "Image filename",
+      toolTip = "Classpath or VFS path to the image")
+  @HopMetadataProperty
+  private String filename;
 
-  @HopMetadataProperty private String scalePercent;
+  @LeanWidgetElement(
+      order = "10100-scalePercent",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Scale percent")
+  @HopMetadataProperty
+  private String scalePercent;
 
   public LeanImageComponent() {
     super("LeanSvgComponent");

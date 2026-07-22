@@ -1,10 +1,16 @@
 package org.lean.presentation.component.types.chart;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hop.core.Const;
 import org.apache.hop.core.exception.HopValueException;
+import org.lean.core.gui.plugin.LeanWidgetType;
+import org.lean.core.gui.plugin.LeanWidgetElement;
 import org.apache.hop.core.row.IValueMeta;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.LeanColorRGB;
@@ -12,6 +18,7 @@ import org.lean.core.LeanGeometry;
 import org.lean.core.LeanPosition;
 import org.lean.core.LeanTextGeometry;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
 import org.lean.presentation.LeanComponentLayoutResult;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.component.LeanComponent;
@@ -23,11 +30,6 @@ import org.lean.presentation.page.LeanPage;
 import org.lean.presentation.theme.LeanTheme;
 import org.lean.render.IRenderContext;
 
-import java.util.ArrayList;
-import java.util.List;
-import lombok.Getter;
-import lombok.Setter;
-
 @JsonDeserialize(as = LeanBarChartComponent.class)
 @LeanComponentPlugin(
     id = "LeanBarChartComponent",
@@ -38,9 +40,21 @@ import lombok.Setter;
 public class LeanBarChartComponent extends LeanBaseChartComponent implements ILeanComponent {
 
   /** % of the width allocated for the horizontal value */
-  @HopMetadataProperty protected String widthPercentage;
+  @LeanWidgetElement(
+      order = "12000-widthPercentage",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Width percentage")
+  @HopMetadataProperty
+  protected String widthPercentage;
 
-  @HopMetadataProperty protected boolean showingFactValues;
+  @LeanWidgetElement(
+      order = "12100-showingFactValues",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Show fact values?")
+  @HopMetadataProperty
+  protected boolean showingFactValues;
 
   public LeanBarChartComponent() {
     this((String) null);
@@ -96,6 +110,11 @@ public class LeanBarChartComponent extends LeanBaseChartComponent implements ILe
     int width = componentGeometry.getWidth();
     int height = componentGeometry.getHeight();
     int tickSize = 4;
+
+    if (isIncompleteChartConfig()) {
+      renderIncompletePlaceholder(gc, componentGeometry, renderContext);
+      return;
+    }
 
     // Now get the horizontal dimension combinations
     //

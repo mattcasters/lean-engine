@@ -38,6 +38,7 @@ import org.lean.core.draw.DrawnItem;
 import org.lean.core.exception.LeanException;
 import org.lean.core.log.LeanMetricsUtil;
 import org.lean.core.metastore.IHasIdentity;
+import org.lean.core.LeanAttachment;
 import org.lean.presentation.component.LeanComponent;
 import org.lean.presentation.component.type.ILeanComponent;
 import org.lean.presentation.connector.LeanConnector;
@@ -46,6 +47,7 @@ import org.lean.presentation.datacontext.PresentationDataContext;
 import org.lean.presentation.datacontext.RenderPageDataContext;
 import org.lean.presentation.interaction.LeanInteraction;
 import org.lean.presentation.interaction.LeanInteractionMethod;
+import org.lean.presentation.layout.LeanLayout;
 import org.lean.presentation.layout.LeanLayoutResults;
 import org.lean.presentation.layout.LeanRenderPage;
 import org.lean.presentation.page.LeanPage;
@@ -210,15 +212,8 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
 
         List<LeanComponent> sortedComponents = page.getSortedComponents();
         for (LeanComponent leanComponent : sortedComponents) {
-          ILeanComponent component = leanComponent.getComponent();
-          if (component.getThemeName() == null) {
-            component.setThemeName(defaultThemeName);
-          }
-          component.setLogChannel(log);
-          component.processSourceData(
-              this, page, leanComponent, presentationDataContext, renderContext, results);
-          component.doLayout(
-              this, page, leanComponent, presentationDataContext, renderContext, results);
+          layoutComponentSafely(
+              log, page, leanComponent, presentationDataContext, renderContext, results);
         }
       }
 
@@ -323,12 +318,31 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
    */
   public ILogChannel render(LeanLayoutResults results, IHopMetadataProvider metadataProvider)
       throws LeanException {
+    return render(results, metadataProvider, null);
+  }
+
+  /**
+   * Render this presentation. When {@code sharedRenderContext} is non-null it is reused (including
+   * its stable series-color maps) so a follow-up single-component preview can match full-page
+   * colors.
+   */
+  public ILogChannel render(
+      LeanLayoutResults results,
+      IHopMetadataProvider metadataProvider,
+      PresentationRenderContext sharedRenderContext)
+      throws LeanException {
 
     ILogChannel log = results.getLog();
     PresentationDataContext presentationDataContext =
         new PresentationDataContext(this, metadataProvider);
     PresentationRenderContext presentationRenderContext =
-        new PresentationRenderContext(this, metadataProvider);
+        sharedRenderContext != null
+            ? sharedRenderContext
+            : new PresentationRenderContext(this, metadataProvider);
+    if (sharedRenderContext != null) {
+      // Keep theme lookup bound to this presentation instance
+      presentationRenderContext.setPresentation(this);
+    }
 
     log.logBasic("Started rendering presentation");
     log.snap(
@@ -350,7 +364,14 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
 
         // Fill the background with the default background color...
         //
-        LeanColorRGB bg = getDefaultTheme().lookupBackgroundColor();
+        LeanTheme defaultTheme = getDefaultTheme();
+        if (defaultTheme == null && themes != null && !themes.isEmpty()) {
+          defaultTheme = themes.get(0);
+        }
+        if (defaultTheme == null) {
+          defaultTheme = LeanTheme.getDefault();
+        }
+        LeanColorRGB bg = defaultTheme.lookupBackgroundColor();
         gc.setColor(new Color(bg.getR(), bg.getG(), bg.getB()));
         gc.fillRect(0, 0, page.getWidth(), page.getHeight());
 
@@ -412,21 +433,27 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
           }
 
           LeanComponent component = componentLayoutResult.getComponent();
-          component
-              .getComponent()
-              .render(componentLayoutResult, results, presentationRenderContext, offSet);
+          LeanRenderPage bodyPage = componentLayoutResult.getRenderPage();
+          renderComponentSafely(
+              log,
+              gc,
+              componentLayoutResult,
+              results,
+              presentationRenderContext,
+              offSet,
+              bodyPage);
 
           if (clip) {
             gc.setClip(oldClip);
           }
 
-          // Remember where we've drawn this component
+          // Remember where we've drawn this component on THIS render page.
+          // Use the layout result geometry (per part / per page), not results.findGeometry(name)
+          // which is a single map entry overwritten by multi-page components (table/crosstab).
           //
-          LeanGeometry componentGeometry = results.findGeometry(component.getName());
+          LeanGeometry componentGeometry = componentLayoutResult.getGeometry();
           if (componentGeometry != null) {
-            componentLayoutResult
-                .getRenderPage()
-                .addComponentDrawnItem(component, componentGeometry, offSet);
+            bodyPage.addComponentDrawnItem(component, componentGeometry, offSet);
           }
 
           gc.setComposite(beforeComposite);
@@ -475,8 +502,8 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
       LeanLayoutResults headerResults = new LeanLayoutResults(log);
 
       for (LeanComponent component : sortedComponents) {
-        component.processAndLayout(
-            log, this, header, pageDataContext, renderContext, headerResults);
+        layoutComponentSafely(
+            log, header, component, pageDataContext, renderContext, headerResults);
       }
 
       // We did the layout and generated a new page for the header
@@ -487,33 +514,38 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
       headerResults.replaceGCForHeaderFooter(gc);
       headerResults.replaceDrawnItemsForHeaderFooter(renderPage.getDrawnItems());
 
-      // Before rendering, position rendering at the top of the page, after the margin...
-      //
-      LeanPosition offSet = new LeanPosition(page.getLeftMargin(), page.getTopMargin());
-      gc.translate(offSet.getX(), offSet.getY());
-
-      // Now render the header onto the given render page GC
-      // Only one header "page" is supported
-      //
-      List<LeanComponentLayoutResult> componentLayoutResults =
-          headerResults.getRenderPages().get(0).getLayoutResults();
-      for (LeanComponentLayoutResult componentLayoutResult : componentLayoutResults) {
-        LeanComponent component = componentLayoutResult.getComponent();
-
-        // Render the component...
+      // Empty header (just enabled, no components yet) has no layout results — skip draw
+      if (!headerResults.getRenderPages().isEmpty()) {
+        // Before rendering, position rendering at the top of the page, after the margin...
         //
-        component
-            .getComponent()
-            .render(componentLayoutResult, headerResults, renderContext, offSet);
+        LeanPosition offSet = new LeanPosition(page.getLeftMargin(), page.getTopMargin());
+        gc.translate(offSet.getX(), offSet.getY());
 
-        // remember where we left it
+        // Now render the header onto the given render page GC
+        // Only one header "page" is supported
         //
-        renderPage.addComponentDrawnItem(component, componentLayoutResult.getGeometry(), offSet);
+        List<LeanComponentLayoutResult> componentLayoutResults =
+            headerResults.getRenderPages().get(0).getLayoutResults();
+        for (LeanComponentLayoutResult componentLayoutResult : componentLayoutResults) {
+          LeanComponent component = componentLayoutResult.getComponent();
+          renderComponentSafely(
+              log,
+              gc,
+              componentLayoutResult,
+              headerResults,
+              renderContext,
+              offSet,
+              renderPage);
+          if (componentLayoutResult.getGeometry() != null) {
+            renderPage.addComponentDrawnItem(
+                component, componentLayoutResult.getGeometry(), offSet);
+          }
+        }
+
+        // Reset the gc translation...
+        //
+        gc.setTransform(parentTransform);
       }
-
-      // Reset the gc translation...
-      //
-      gc.setTransform(parentTransform);
     }
 
     if (footer != null) {
@@ -529,8 +561,8 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
       LeanLayoutResults footerResults = new LeanLayoutResults(log);
 
       for (LeanComponent leanComponent : sortedComponents) {
-        leanComponent.processAndLayout(
-            log, this, footer, pageDataContext, renderContext, footerResults);
+        layoutComponentSafely(
+            log, footer, leanComponent, pageDataContext, renderContext, footerResults);
       }
 
       // We did the layout and generated a new page for the footer
@@ -541,36 +573,292 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
       footerResults.replaceGCForHeaderFooter(gc);
       footerResults.replaceDrawnItemsForHeaderFooter(renderPage.getDrawnItems());
 
-      // Before rendering, position rendering at the bottom of the page.
-      // The position is the page height minus bottom margin and footer height
-      //
-      LeanPosition offSet =
-          new LeanPosition(
-              page.getLeftMargin(), page.getHeight() - page.getBottomMargin() - getFooterHeight());
-      gc.translate(offSet.getX(), offSet.getY());
-
-      // Now render the footer onto the given render page GC
-      // Only one footer "page" is supported
-      //
-      List<LeanComponentLayoutResult> componentLayoutResults =
-          footerResults.getRenderPages().get(0).getLayoutResults();
-      for (LeanComponentLayoutResult componentLayoutResult : componentLayoutResults) {
-        LeanComponent component = componentLayoutResult.getComponent();
-
-        // Render the footer component...
+      // Empty footer (just enabled, no components yet) has no layout results — skip draw
+      if (!footerResults.getRenderPages().isEmpty()) {
+        // Before rendering, position rendering at the bottom of the page.
+        // The position is the page height minus bottom margin and footer height
         //
-        component
-            .getComponent()
-            .render(componentLayoutResult, footerResults, renderContext, offSet);
+        LeanPosition offSet =
+            new LeanPosition(
+                page.getLeftMargin(),
+                page.getHeight() - page.getBottomMargin() - getFooterHeight());
+        gc.translate(offSet.getX(), offSet.getY());
 
-        // remember where we left it
+        // Now render the footer onto the given render page GC
+        // Only one footer "page" is supported
         //
-        renderPage.addComponentDrawnItem(component, componentLayoutResult.getGeometry(), offSet);
+        List<LeanComponentLayoutResult> componentLayoutResults =
+            footerResults.getRenderPages().get(0).getLayoutResults();
+        for (LeanComponentLayoutResult componentLayoutResult : componentLayoutResults) {
+          LeanComponent component = componentLayoutResult.getComponent();
+          renderComponentSafely(
+              log,
+              gc,
+              componentLayoutResult,
+              footerResults,
+              renderContext,
+              offSet,
+              renderPage);
+          if (componentLayoutResult.getGeometry() != null) {
+            renderPage.addComponentDrawnItem(
+                component, componentLayoutResult.getGeometry(), offSet);
+          }
+        }
+
+        // Reset the gc translation...
+        //
+        gc.setTransform(parentTransform);
       }
+    }
+  }
 
-      // Reset the gc translation...
-      //
-      gc.setTransform(parentTransform);
+  /** Data-map key when layout failed for a component (placeholder still drawn). */
+  public static final String DATA_LAYOUT_ERROR = "layoutError";
+
+  /** Full exception chain / stack for property-panel diagnostics. */
+  public static final String DATA_LAYOUT_ERROR_DETAIL = "layoutErrorDetail";
+
+  /**
+   * Process source data + layout for one component. On failure (e.g. SQL table missing), log and
+   * place a placeholder so the presentation editor can still open.
+   */
+  private void layoutComponentSafely(
+      ILogChannel log,
+      LeanPage page,
+      LeanComponent leanComponent,
+      IDataContext dataContext,
+      IRenderContext renderContext,
+      LeanLayoutResults results) {
+    if (leanComponent == null || leanComponent.getComponent() == null) {
+      return;
+    }
+    ILeanComponent component = leanComponent.getComponent();
+    try {
+      // Treat blank like unset (forms often write "" for "use default theme")
+      if (StringUtils.isEmpty(component.getThemeName())) {
+        component.setThemeName(defaultThemeName);
+      }
+      component.setLogChannel(log);
+      component.processSourceData(this, page, leanComponent, dataContext, renderContext, results);
+      component.doLayout(this, page, leanComponent, dataContext, renderContext, results);
+    } catch (Exception e) {
+      String summary = summarizeException(e);
+      String detail = formatExceptionDetail(e);
+      log.logError(
+          "Error laying out component '"
+              + leanComponent.getName()
+              + "' (continuing with placeholder): "
+              + summary,
+          e);
+      addFailedComponentPlaceholder(results, page, leanComponent, summary, detail);
+    }
+  }
+
+  /**
+   * Render one component layout result; draw an error box if layout failed or render throws.
+   *
+   * @param targetPage the page receiving drawn items (body page; may differ from layout result page
+   *     for header/footer). When non-null, layout errors are recorded for the editor.
+   */
+  private void renderComponentSafely(
+      ILogChannel log,
+      SVGGraphics2D gc,
+      LeanComponentLayoutResult componentLayoutResult,
+      LeanLayoutResults results,
+      IRenderContext renderContext,
+      LeanPosition offSet,
+      LeanRenderPage targetPage) {
+    LeanComponent component = componentLayoutResult.getComponent();
+    try {
+      if (componentLayoutResult.getDataMap() != null
+          && componentLayoutResult.getDataMap().containsKey(DATA_LAYOUT_ERROR)) {
+        String summary =
+            String.valueOf(componentLayoutResult.getDataMap().get(DATA_LAYOUT_ERROR));
+        Object detailObj = componentLayoutResult.getDataMap().get(DATA_LAYOUT_ERROR_DETAIL);
+        String detail = detailObj != null ? String.valueOf(detailObj) : summary;
+        drawFailedComponentPlaceholder(gc, componentLayoutResult.getGeometry(), summary);
+        recordComponentErrorOnPage(targetPage, component, summary, detail);
+        return;
+      }
+      component
+          .getComponent()
+          .render(componentLayoutResult, results, renderContext, offSet);
+    } catch (Exception renderEx) {
+      String summary = summarizeException(renderEx);
+      String detail = formatExceptionDetail(renderEx);
+      log.logError(
+          "Error rendering component '" + component.getName() + "': " + summary, renderEx);
+      drawFailedComponentPlaceholder(gc, componentLayoutResult.getGeometry(), summary);
+      if (componentLayoutResult.getDataMap() != null) {
+        componentLayoutResult.getDataMap().put(DATA_LAYOUT_ERROR, summary);
+        componentLayoutResult.getDataMap().put(DATA_LAYOUT_ERROR_DETAIL, detail);
+      }
+      recordComponentErrorOnPage(targetPage, component, summary, detail);
+    }
+  }
+
+  private static void recordComponentErrorOnPage(
+      LeanRenderPage targetPage, LeanComponent component, String summary, String detail) {
+    if (targetPage == null || component == null) {
+      return;
+    }
+    targetPage.recordComponentError(component.getName(), summary, detail);
+  }
+
+  /** Prefer the root cause message for short UI labels (canvas / list). */
+  public static String summarizeException(Throwable e) {
+    if (e == null) {
+      return "Unknown error";
+    }
+    Throwable root = e;
+    while (root.getCause() != null && root.getCause() != root) {
+      root = root.getCause();
+    }
+    if (root.getMessage() != null && !root.getMessage().isBlank()) {
+      return root.getMessage().trim();
+    }
+    if (e.getMessage() != null && !e.getMessage().isBlank()) {
+      return e.getMessage().trim();
+    }
+    return e.getClass().getSimpleName();
+  }
+
+  /** Full cause chain + simple stack for the property-panel diagnostics. */
+  public static String formatExceptionDetail(Throwable e) {
+    if (e == null) {
+      return "";
+    }
+    StringBuilder sb = new StringBuilder();
+    Throwable t = e;
+    int depth = 0;
+    while (t != null && depth < 20) {
+      if (depth > 0) {
+        sb.append("\nCaused by: ");
+      }
+      String msg = t.getMessage();
+      if (msg != null && !msg.isBlank()) {
+        sb.append(msg.trim());
+      } else {
+        sb.append(t.getClass().getName());
+      }
+      t = t.getCause();
+      depth++;
+    }
+    try {
+      String stack = Const.getSimpleStackTrace(e);
+      if (stack != null && !stack.isBlank()) {
+        sb.append("\n\n").append(stack.trim());
+      }
+    } catch (Exception ignored) {
+      // Const may not be available in all environments
+    }
+    return sb.toString();
+  }
+
+  private void addFailedComponentPlaceholder(
+      LeanLayoutResults results,
+      LeanPage page,
+      LeanComponent leanComponent,
+      String errorMessage,
+      String errorDetail) {
+    try {
+      LeanRenderPage renderPage = results.getCurrentRenderPage(page);
+      if (renderPage == null) {
+        renderPage = results.addNewPage(page, null);
+      }
+      LeanGeometry geometry = geometryFromLayoutOrDefault(leanComponent, page);
+      LeanComponentLayoutResult result = new LeanComponentLayoutResult();
+      result.setRenderPage(renderPage);
+      result.setSourcePage(page);
+      result.setComponent(leanComponent);
+      result.setGeometry(geometry);
+      result.setPartNumber(1);
+      result.getDataMap().put(DATA_LAYOUT_ERROR, errorMessage);
+      if (errorDetail != null) {
+        result.getDataMap().put(DATA_LAYOUT_ERROR_DETAIL, errorDetail);
+      }
+      renderPage.recordComponentError(leanComponent.getName(), errorMessage, errorDetail);
+      results.addComponentGeometry(leanComponent.getName(), geometry);
+      renderPage.getLayoutResults().add(result);
+    } catch (Exception e) {
+      // Last resort: ignore placeholder failure so layout can finish
+      if (results != null && results.getLog() != null) {
+        results
+            .getLog()
+            .logError(
+                "Could not create placeholder for component '"
+                    + leanComponent.getName()
+                    + "': "
+                    + e.getMessage());
+      }
+    }
+  }
+
+  /**
+   * Best-effort geometry from absolute layout offsets when processSourceData/doLayout failed
+   * (cannot use component getExpectedGeometry — it often depends on data details).
+   */
+  private LeanGeometry geometryFromLayoutOrDefault(LeanComponent leanComponent, LeanPage page) {
+    int x = 0;
+    int y = 0;
+    int w = 400;
+    int h = 200;
+    LeanLayout layout = leanComponent != null ? leanComponent.getLayout() : null;
+    if (layout != null) {
+      if (layout.getLeft() != null) {
+        x = layout.getLeft().getOffset();
+      }
+      if (layout.getTop() != null) {
+        y = layout.getTop().getOffset();
+      }
+      if (layout.getRight() != null
+          && layout.getRight().getAlignment() == LeanAttachment.Alignment.LEFT) {
+        w = Math.max(40, layout.getRight().getOffset() - x);
+      } else if (layout.getRight() != null
+          && (layout.getRight().getAlignment() == LeanAttachment.Alignment.RIGHT
+              || layout.getRight().getAlignment() == LeanAttachment.Alignment.DEFAULT)
+          && page != null) {
+        w = Math.max(40, page.getWidthBetweenMargins() - x + layout.getRight().getOffset());
+      }
+      if (layout.getBottom() != null
+          && layout.getBottom().getAlignment() == LeanAttachment.Alignment.TOP) {
+        h = Math.max(40, layout.getBottom().getOffset() - y);
+      } else if (layout.getBottom() != null
+          && (layout.getBottom().getAlignment() == LeanAttachment.Alignment.BOTTOM
+              || layout.getBottom().getAlignment() == LeanAttachment.Alignment.DEFAULT)
+          && page != null) {
+        h = Math.max(40, getUsableHeight(page) - y + layout.getBottom().getOffset());
+      }
+    }
+    return new LeanGeometry(x, y, w, h);
+  }
+
+  private static void drawFailedComponentPlaceholder(
+      SVGGraphics2D gc, LeanGeometry geometry, String message) {
+    if (gc == null || geometry == null) {
+      return;
+    }
+    int x = geometry.getX();
+    int y = geometry.getY();
+    int w = Math.max(40, geometry.getWidth());
+    int h = Math.max(24, geometry.getHeight());
+    Color old = gc.getColor();
+    java.awt.Font oldFont = gc.getFont();
+    try {
+      gc.setColor(new Color(255, 245, 245));
+      gc.fillRect(x, y, w, h);
+      gc.setColor(new Color(180, 40, 40));
+      gc.drawRect(x, y, w - 1, h - 1);
+      gc.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 11));
+      String text = message != null ? message : "Component error";
+      // Keep first line short enough for the box
+      if (text.length() > 120) {
+        text = text.substring(0, 117) + "...";
+      }
+      gc.drawString(text, x + 6, y + Math.min(18, h - 4));
+    } finally {
+      gc.setColor(old);
+      gc.setFont(oldFont);
     }
   }
 

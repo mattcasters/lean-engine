@@ -3,19 +3,25 @@ package org.lean.presentation.component.types.chart;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hop.core.Const;
 import org.apache.hop.core.exception.HopException;
 import org.apache.hop.core.exception.HopValueException;
+import org.lean.core.gui.plugin.LeanWidgetType;
+import org.lean.core.gui.plugin.LeanWidgetElement;
 import org.apache.hop.core.row.IValueMeta;
 import org.apache.hop.core.row.value.ValueMetaNumber;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.LeanDimension;
 import org.lean.core.LeanFact;
+import org.lean.core.LeanGeometry;
 import org.lean.core.LeanSize;
 import org.lean.core.LeanTextGeometry;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.component.LeanComponent;
 import org.lean.presentation.component.type.ILeanComponent;
@@ -25,25 +31,99 @@ import org.lean.presentation.datacontext.IDataContext;
 import org.lean.presentation.layout.LeanLayoutResults;
 import org.lean.presentation.page.LeanPage;
 import org.lean.render.IRenderContext;
-import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 @Setter
 public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponent
     implements ILeanComponent {
 
-  @HopMetadataProperty protected int horizontalMargin;
-  @HopMetadataProperty protected int verticalMargin;
-  @HopMetadataProperty protected boolean showingHorizontalLabels;
-  @HopMetadataProperty protected boolean showingVerticalLabels;
-  @HopMetadataProperty protected boolean showingAxisTicks;
-  @HopMetadataProperty protected int dotSize;
-  @HopMetadataProperty protected String title;
-  @HopMetadataProperty protected String lineWidth;
-  @HopMetadataProperty protected boolean usingZeroBaseline;
-  @HopMetadataProperty protected boolean showingLegend;
-  @HopMetadataProperty protected String horizontalLabelInterval;
+  @LeanWidgetElement(
+      order = "10000-title",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Title")
+  @HopMetadataProperty
+  protected String title;
+
+  @LeanWidgetElement(
+      order = "10100-horizontalMargin",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Horizontal margin")
+  @HopMetadataProperty
+  protected int horizontalMargin;
+
+  @LeanWidgetElement(
+      order = "10200-verticalMargin",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Vertical margin")
+  @HopMetadataProperty
+  protected int verticalMargin;
+
+  @LeanWidgetElement(
+      order = "10300-showingHorizontalLabels",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Show horizontal labels?")
+  @HopMetadataProperty
+  protected boolean showingHorizontalLabels;
+
+  @LeanWidgetElement(
+      order = "10400-showingVerticalLabels",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Show vertical labels?")
+  @HopMetadataProperty
+  protected boolean showingVerticalLabels;
+
+  @LeanWidgetElement(
+      order = "10500-showingAxisTicks",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Show axis ticks?")
+  @HopMetadataProperty
+  protected boolean showingAxisTicks;
+
+  @LeanWidgetElement(
+      order = "10600-dotSize",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Dot size")
+  @HopMetadataProperty
+  protected int dotSize;
+
+  @LeanWidgetElement(
+      order = "10700-lineWidth",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Line width")
+  @HopMetadataProperty
+  protected String lineWidth;
+
+  @LeanWidgetElement(
+      order = "10800-usingZeroBaseline",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Use zero baseline?")
+  @HopMetadataProperty
+  protected boolean usingZeroBaseline;
+
+  @LeanWidgetElement(
+      order = "10900-showingLegend",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.CHECKBOX,
+      label = "Show legend?")
+  @HopMetadataProperty
+  protected boolean showingLegend;
+
+  @LeanWidgetElement(
+      order = "11000-horizontalLabelInterval",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Horizontal label interval")
+  @HopMetadataProperty
+  protected String horizontalLabelInterval;
 
   // Calculated at runtime
   //
@@ -84,14 +164,38 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
       IRenderContext renderContext,
       LeanLayoutResults results)
       throws LeanException {
+    // Calculate the title based on data context (even when data is not yet configured)
+    //
+    titleText =
+        dataContext != null && dataContext.getVariables() != null
+            ? dataContext.getVariables().resolve(title)
+            : title;
+    actualHorizontalLabelInterval =
+        Const.toInt(
+            dataContext != null && dataContext.getVariables() != null
+                ? dataContext.getVariables().resolve(horizontalLabelInterval)
+                : horizontalLabelInterval,
+            0);
+
+    // Newly dropped / incomplete charts: no connector yet — stay empty, still layout/render
+    if (StringUtils.isBlank(sourceConnectorName)) {
+      return;
+    }
+
     // Read the data
     //
     LeanConnector connector = dataContext.getConnector(sourceConnectorName);
     if (connector == null) {
-      throw new LeanException("Unable to find connector '" + sourceConnectorName + "'");
+      // Keep presentation renderable; properties form can fix the connector name
+      return;
     }
 
-    validateSettings();
+    // Incomplete dimensions/facts (fresh palette drop) — do not fail the whole page
+    try {
+      validateSettings();
+    } catch (LeanException e) {
+      return;
+    }
 
     // Get the rows
     //
@@ -108,12 +212,6 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
 
     connector.getConnector().startStreaming(dataContext);
     connector.getConnector().waitUntilFinished();
-
-    // Calculate the title based on data context
-    //
-    titleText = dataContext.getVariables().resolve(title);
-    actualHorizontalLabelInterval =
-        Const.toInt(dataContext.getVariables().resolve(horizontalLabelInterval), 0);
   }
 
   protected void validateSettings() throws LeanException {
@@ -162,7 +260,13 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
       IRenderContext renderContext,
       LeanLayoutResults results) {
 
-    // Calculated using the layout provided
+    // Incomplete / palette-dropped charts have no natural size from data; provide a default
+    // so layout (and hover/selection rects) get a real width/height when only left/top are set.
+    if (isIncompleteChartConfig()) {
+      return new LeanSize(400, 260);
+    }
+
+    // Otherwise size is driven by layout attachments (left/top/right/bottom)
     //
     return null;
   }
@@ -176,6 +280,42 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
       combo.append(combination);
     }
     return combo.toString();
+  }
+
+  /** True when the chart has no usable data configuration yet (palette drop / incomplete form). */
+  protected boolean isIncompleteChartConfig() {
+    return StringUtils.isBlank(sourceConnectorName) || facts == null || facts.isEmpty();
+  }
+
+  /**
+   * Draw an empty chart frame when connector/facts are not configured yet so palette-drop does not
+   * break the presentation render.
+   */
+  protected void renderIncompletePlaceholder(
+      SVGGraphics2D gc, LeanGeometry componentGeometry, IRenderContext renderContext)
+      throws LeanException {
+    drawBackGround(gc, componentGeometry, renderContext);
+    // Force a visible border for empty components even when border flag is off
+    boolean oldBorder = border;
+    border = true;
+    try {
+      drawBorder(gc, componentGeometry, renderContext);
+    } finally {
+      border = oldBorder;
+    }
+    enableColor(gc, lookupDefaultColor(renderContext));
+    enableFont(gc, lookupDefaultFont(renderContext));
+    String msg =
+        StringUtils.isNotBlank(titleText)
+            ? titleText
+            : (StringUtils.isNotBlank(title) ? title : "Chart");
+    String hint =
+        StringUtils.isBlank(sourceConnectorName)
+            ? msg + " (set connector)"
+            : msg + " (configure dimensions/facts)";
+    int tx = componentGeometry.getX() + 8;
+    int ty = componentGeometry.getY() + 20;
+    gc.drawString(hint, tx, ty);
   }
 
   protected ChartDetails calculateDetails(SVGGraphics2D gc, int x, int y, int width, int height)
@@ -208,7 +348,7 @@ public abstract class LeanBaseChartComponent extends LeanBaseAggregatingComponen
       verticalCombinations.add(new ArrayList<>());
     }
 
-    if (facts.isEmpty()) {
+    if (facts == null || facts.isEmpty()) {
       throw new LeanException("We need at least 1 fact to work with");
     }
     if (facts.size() > 1) {

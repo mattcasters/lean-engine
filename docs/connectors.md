@@ -52,6 +52,40 @@ Sort, filter, distinct, selection, passthrough, and chain attach a row listener 
 - **Selection**: column names must exist in the source `IRowMeta`.
 - **Chain**: first step uses the chain’s `sourceConnectorName`; last step is exposed as `_RESULT_OF_CHAIN_`.
 
+## Browser configuration forms (`@LeanWidgetElement`)
+
+Connector fields use the same contract as components: `@LeanWidgetElement` next to
+`@HopMetadataProperty`. `LeanGuiRegistry` scans connectors at `LeanEnvironment.init()`.
+
+| Plugin ID | Form notes |
+|-----------|------------|
+| `SqlConnector` | database connection name, SQL |
+| `SampleDataConnector` | row count |
+| `SortConnector` | columns list + sort methods list |
+| `SelectionConnector` | selected columns |
+| `LeanListConnector` | column name + string values |
+| `LeanRestConnector` | URL, path, body, rows path |
+| `SimpleFilterConnector` | filter field/value pairs |
+| `DistinctConnector` / `PassthroughConnector` | base source connector only |
+| `MetadataElementsConnector` | metadata type key |
+| `MetadataTypesConnector` / `MetadataPresentationsConnector` | no plugin-specific fields |
+| `ChainConnector` | nested connectors as advanced JSON list |
+
+Schema APIs (lean-rest):
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET edit/schema/connector/{pluginId}/` | JSON form schema |
+| `GET edit/connector/{pluginId}/` | Generated HTML editor |
+| `POST metadata/modify/connector/` | Save connector metadata (`oldConnectorName`, `leanConnectorJson`) |
+| `GET metadata/list/connector/` | Connector names |
+| `GET metadata/connector-json/{name}` | Load Hop-format connector JSON for the form editor |
+| `GET plugins/connectors` | Available connector plugin types (`LeanPluginInfoRest` in lean-engine) |
+
+In the presentation shell, the **add-item** toolbar icon opens the connector list/editor side panel.
+
 ## Testing
 
 Unit tests under `src/test/java/org/lean/presentation/connector/` use `ConnectorTestSupport` and `PresentationDataContext` with in-memory connectors. SQL tests use H2 via `hop-databases-h2` and `TablePresentationUtil`.
+
+`PluginFormCoverageTest` asserts every registered connector id builds a form schema.

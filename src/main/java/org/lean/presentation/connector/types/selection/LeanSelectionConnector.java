@@ -15,6 +15,9 @@ import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.ILeanRowListener;
 import org.lean.core.LeanColumn;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
+import org.lean.core.gui.plugin.LeanWidgetElement;
+import org.lean.core.gui.plugin.LeanWidgetType;
 import org.lean.presentation.connector.LeanConnector;
 import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
@@ -34,7 +37,14 @@ import lombok.Setter;
 public class LeanSelectionConnector extends LeanBaseConnector implements ILeanConnector {
 
   @JsonIgnore protected ArrayBlockingQueue<Object> finishedQueue;
-  @HopMetadataProperty private List<LeanColumn> columns;
+
+  @LeanWidgetElement(
+      order = "10000-columns",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Selected columns")
+  @HopMetadataProperty
+  private List<LeanColumn> columns;
 
   public LeanSelectionConnector() {
     super("SelectionConnector");

@@ -9,6 +9,9 @@ import java.util.concurrent.TimeUnit;
 import org.apache.hop.core.row.IRowMeta;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.form.LeanGuiFormConstants;
+import org.lean.core.gui.plugin.LeanWidgetElement;
+import org.lean.core.gui.plugin.LeanWidgetType;
 import org.lean.presentation.connector.LeanConnector;
 import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
@@ -30,7 +33,19 @@ public class LeanChainConnector extends LeanBaseConnector implements ILeanConnec
 
   public static final String STRING_LAST_CONNECTOR_NAME = "_RESULT_OF_CHAIN_";
   @JsonIgnore protected ArrayBlockingQueue<Object> finishedQueue;
-  @HopMetadataProperty private List<ILeanConnector> connectors;
+
+  /**
+   * Nested connector graph. Exposed as a form list with itemKind {@code connector}; full nested
+   * connector editing is limited in the web UI (plugin id + JSON payload).
+   */
+  @LeanWidgetElement(
+      order = "10000-connectors",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Chained connectors",
+      toolTip = "Ordered list of nested connector plugins (edit carefully)")
+  @HopMetadataProperty
+  private List<ILeanConnector> connectors;
 
   public LeanChainConnector() {
     super("ChainConnector");

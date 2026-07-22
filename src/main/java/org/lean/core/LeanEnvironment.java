@@ -5,6 +5,7 @@ import org.apache.hop.core.exception.HopException;
 import org.apache.hop.core.plugins.PluginRegistry;
 import org.apache.hop.metadata.plugin.MetadataPluginType;
 import org.lean.core.exception.LeanException;
+import org.lean.core.gui.plugin.LeanGuiRegistry;
 import org.lean.presentation.component.type.LeanComponentPluginType;
 import org.lean.presentation.connector.type.LeanConnectorPluginType;
 
@@ -42,6 +43,7 @@ public class LeanEnvironment {
       PluginRegistry.addPluginType(LeanConnectorPluginType.getInstance());
       // registerType() skips types already loaded; only new Lean/metadata types are scanned.
       PluginRegistry.init();
+      LeanGuiRegistry.getInstance().scanFromPluginRegistry();
     } catch (Exception e) {
       throw new LeanException("Unable to register lean plugin types", e);
     }
