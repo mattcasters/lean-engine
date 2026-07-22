@@ -71,9 +71,6 @@ public class LeanSortConnector extends LeanBaseConnector implements ILeanConnect
 
   @Override
   public void startStreaming(IDataContext dataContext) throws LeanException {
-
-    // which connector do we read from?
-    //
     LeanConnector connector = dataContext.getConnector(getSourceConnectorName());
     if (connector == null) {
       throw new LeanException(
@@ -86,8 +83,6 @@ public class LeanSortConnector extends LeanBaseConnector implements ILeanConnect
     }
     finishedQueue = new ArrayBlockingQueue<>(10);
 
-    // What does the input look like?
-    //
     final IRowMeta inputRowMeta = connector.describeOutput(dataContext);
     final IRowMeta outputRowMeta = inputRowMeta.clone();
 
@@ -99,7 +94,8 @@ public class LeanSortConnector extends LeanBaseConnector implements ILeanConnect
       LeanSortMethod sortMethod = sortMethods.get(i);
       fieldIndexes[i] = inputRowMeta.indexOfValue(column.getColumnName());
       if (fieldIndexes[i] < 0) {
-        throw new LeanException("Sort column '" + column.getColumnName()+"' could not be found in the input");
+        throw new LeanException(
+            "Sort column '" + column.getColumnName() + "' could not be found in the input");
       }
 
       IValueMeta valueMeta = outputRowMeta.getValueMeta(fieldIndexes[i]);
@@ -119,97 +115,67 @@ public class LeanSortConnector extends LeanBaseConnector implements ILeanConnect
       }
     }
 
-    // Add a row listener to the parent connector
-    //
-    connector
-        .getConnector()
-        .addRowListener(
-            new ILeanRowListener() {
-              private Object[] previousRow = null;
+    ILeanRowListener listener =
+        (rowMeta, rowData) -> {
+          if (rowData == null) {
+            try {
+              Collections.sort(
+                  rows,
+                  (o1, o2) -> {
+                    try {
+                      return outputRowMeta.compare(o1, o2, fieldIndexes);
+                    } catch (HopValueException e) {
+                      throw new RuntimeException("Error comparing rows", e);
+                    }
+                  });
+            } catch (Exception e) {
+              throw new LeanException("Error sorting rows", e);
+            }
 
-              @Override
-              public void rowReceived(IRowMeta rowMeta, Object[] rowData) throws LeanException {
+            for (Object[] row : rows) {
+              passToRowListeners(outputRowMeta, row);
+            }
+            rows.clear();
+            outputDone();
+            finishedQueue.add(new Object());
+            return;
+          }
 
-                if (rowData == null) {
-                  // Sort the rows list
-                  //
-                  try {
-                    Collections.sort(
-                        rows,
-                        (o1, o2) -> {
-                          try {
-                            return outputRowMeta.compare(o1, o2, fieldIndexes);
-                          } catch (HopValueException e) {
-                            throw new RuntimeException("Error comparing rows", e);
-                          }
-                        });
-                  } catch (Exception e) {
-                    throw new LeanException("Error sorting rows", e);
-                  }
+          rows.add(rowData);
+        };
 
-                  // Write the rows
-                  //
-                  for (Object[] row : rows) {
-                    passToRowListeners(outputRowMeta, row);
-                  }
-
-                  // Rows are no longer needed, GC them immediately
-                  //
-                  rows.clear();
-                  outputDone();
-                  finishedQueue.add(new Object());
-                  return;
-                }
-
-                rows.add(rowData);
-              }
-            });
-
-    // Now signal start streaming...
-    //
-    connector.getConnector().startStreaming(dataContext);
+    ILeanConnector source = connector.getConnector();
+    attachToSource(source, listener);
+    source.startStreaming(dataContext);
   }
 
   @Override
   public void waitUntilFinished() throws LeanException {
     try {
-      while (finishedQueue.poll(1, TimeUnit.DAYS) == null) {
-        ;
+      while (finishedQueue != null && finishedQueue.poll(1, TimeUnit.DAYS) == null) {
+        // wait for end-of-stream signal
       }
     } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       throw new LeanException("Interrupted while waiting for more rows in connector", e);
+    } finally {
+      detachFromSource();
+      finishedQueue = null;
     }
-    finishedQueue = null;
   }
 
-  /**
-   * Gets columns
-   *
-   * @return value of columns
-   */
   public List<LeanColumn> getColumns() {
     return columns;
   }
 
-  /**
-   * @param columns The columns to set
-   */
   public void setColumns(List<LeanColumn> columns) {
     this.columns = columns;
   }
 
-  /**
-   * Gets sortMethods
-   *
-   * @return value of sortMethods
-   */
   public List<LeanSortMethod> getSortMethods() {
     return sortMethods;
   }
 
-  /**
-   * @param sortMethods The sortMethods to set
-   */
   public void setSortMethods(List<LeanSortMethod> sortMethods) {
     this.sortMethods = sortMethods;
   }

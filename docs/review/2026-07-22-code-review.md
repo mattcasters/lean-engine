@@ -4,28 +4,29 @@ Review after Hop 2.18.1 / Java 21 port. Severity: **P0** must-fix, **P1** should
 
 ## Findings
 
-### P1 — Connector streaming state
+### P1 — Connector streaming state — **FIXED**
 
 **Where:** Sort, filter, distinct, selection, passthrough, chain  
-**Issue:** `finishedQueue != null` guards against double `startStreaming`, but listeners are never removed from the **source** connector after completion. Reusing a source connector instance for multiple transform runs can stack listeners.  
-**Mitigation:** `PresentationDataContext` copies connectors; document that apps should not reuse raw connector instances across concurrent streams. Follow-up: remove source listeners in `waitUntilFinished`.
+**Issue:** Listeners were never removed from the source after completion.  
+**Fix:** `LeanBaseConnector.attachToSource` / `detachFromSource`; all transform connectors detach in `waitUntilFinished()` `finally`. Covered by listener-cleanup unit test.
 
-### P1 — Distinct is “previous row” distinct, not full-set distinct
+### P1 — Distinct is “previous row” distinct, not full-set distinct — **DOCUMENTED**
 
 **Where:** `LeanDistinctConnector`  
-**Issue:** Compares only to the previous row (good for pre-sorted streams; surprising otherwise).  
-**Mitigation:** Documented in tests/docs. Consider renaming or adding a full-hash distinct mode (P2).
+**Issue:** Compares only to the previous row.  
+**Fix:** Class + plugin description + `docs/connectors.md` clarify adjacent-only semantics. Full-set distinct remains P2.
 
-### P1 — Simple filter AND of equality only
+### P1 — Simple filter AND of equality only — **DOCUMENTED**
 
 **Where:** `LeanSimpleFilterConnector`  
-**Issue:** Multiple filter entries must all match; no OR/operators/comparators. Fine for now; document clearly.
+**Issue:** Equality-only filter semantics.  
+**Fix:** Class Javadoc + `docs/connectors.md` describe AND across fields / OR within a field’s value set.
 
-### P1 — REST connector stack
+### P1 — REST connector stack — **FIXED**
 
 **Where:** `LeanRestConnector`  
-**Issue:** Uses Apache HttpClient + json-simple while Jersey client is also a dependency; mixed `jakarta` elsewhere.  
-**Mitigation:** Consolidate on one HTTP + JSON stack in a later PR (Jackson already present).
+**Issue:** Apache HttpClient + json-simple + unused Jersey.  
+**Fix:** JDK `HttpClient` + Jackson; removed json-simple and Jersey client dependencies; unit tests with local `HttpServer`.
 
 ### P2 — Large component classes
 
@@ -39,13 +40,15 @@ Crosstab (~1.2k LOC), table (~850 LOC), chart base (~600 LOC). Hard to unit-test
 
 `LeanGeometry.maxSurface` stores max right/bottom in width/height fields rather than true width/height. Call sites appear consistent; document or fix with tests if public.
 
-### Fixed in this modernization pass
+### Fixed in modernization / P1 pass
 
 - Jandex version mismatch with Hop 2.18.1 (init failures)
 - JSON `fullName` round-trip failure from `HopMetadataBase`
 - Race-prone `LeanEnvironment.init` (now synchronized/idempotent)
 - Removed dead `ITypeMetadata` adapters and engine `@Path` on DB connection
 - SQL connector test restored on JUnit 5
+- Transform listener cleanup (`attachToSource` / `detachFromSource`)
+- REST connector on JDK HttpClient + Jackson; Jersey/json-simple removed
 
 ## Test coverage status
 
@@ -53,15 +56,16 @@ Crosstab (~1.2k LOC), table (~850 LOC), chart base (~600 LOC). Hard to unit-test
 |------|--------|
 | Sample / list / sort / filter / distinct / passthrough / selection | Unit tests added |
 | SQL (H2) | Unit test (JUnit 5) |
+| REST | Unit tests with local HttpServer |
+| Listener cleanup | Unit test on shared source instance |
 | Presentation SVG renders | Existing integration tests |
-| REST / chain / metadata connectors | Still thin |
+| Chain / metadata connectors | Still thin |
 | Component unit tests (isolated) | Still thin (mostly presentation-level) |
 | NPE JSON fixtures | Exercised via SteelWheels presentation suite |
 
 ## Recommended next fixes
 
-1. Listener cleanup on transform connectors  
-2. REST connector modernization + unit tests (WireMock)  
-3. Chain connector unit test  
-4. Assert SVG content (not only “did not throw”) in presentation tests  
-5. Lombok pass on metadata beans  
+1. Chain connector unit test  
+2. Assert SVG content (not only “did not throw”) in presentation tests  
+3. Lombok pass on metadata beans  
+4. Optional full-set distinct mode (P2)  

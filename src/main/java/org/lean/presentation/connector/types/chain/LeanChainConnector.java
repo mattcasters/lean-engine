@@ -2,6 +2,10 @@ package org.lean.presentation.connector.types.chain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import org.apache.hop.core.row.IRowMeta;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.exception.LeanException;
@@ -12,11 +16,6 @@ import org.lean.presentation.connector.type.LeanConnectorPlugin;
 import org.lean.presentation.connector.types.passthrough.PassthroughRowListener;
 import org.lean.presentation.datacontext.ChainDataContext;
 import org.lean.presentation.datacontext.IDataContext;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 @JsonDeserialize(as = LeanChainConnector.class)
 @LeanConnectorPlugin(
@@ -55,30 +54,20 @@ public class LeanChainConnector extends LeanBaseConnector implements ILeanConnec
 
   @Override
   public IRowMeta describeOutput(IDataContext dataContext) throws LeanException {
-
-    // Validate input first
-    //
     LeanConnector connector = dataContext.getConnector(getSourceConnectorName());
     if (connector == null) {
       throw new LeanException(
           "Unable to find connector source '"
               + getSourceConnectorName()
-              + "' for passthrough connector");
+              + "' for chain connector");
     }
 
-    // Get the output after chaining...
-    //
     ChainDataContext chainDataContext = createChainContext(dataContext);
-
-    // Describe output of last connector in chain
-    //
     LeanConnector lastConnector = chainDataContext.getLastConnector();
     return lastConnector.getConnector().describeOutput(dataContext);
   }
 
   public ChainDataContext createChainContext(IDataContext parentDataContext) {
-    // We want to chain all the connectors, give them sampledata names,
-    //
     ChainDataContext chainDataContext = new ChainDataContext(parentDataContext);
 
     String previousName = null;
@@ -86,7 +75,6 @@ public class LeanChainConnector extends LeanBaseConnector implements ILeanConnec
       ILeanConnector connector = connectors.get(i);
       String connectorName;
       if (i == connectors.size() - 1) {
-        // Last connector
         connectorName = STRING_LAST_CONNECTOR_NAME;
       } else {
         connectorName = "__ChainConnector_" + i;
@@ -106,17 +94,12 @@ public class LeanChainConnector extends LeanBaseConnector implements ILeanConnec
 
   @Override
   public void startStreaming(IDataContext dataContext) throws LeanException {
-
-    // which connector do we read from?
-    //
     LeanConnector sourceConnector = dataContext.getConnector(getSourceConnectorName());
     if (sourceConnector == null) {
       throw new LeanException(
           "Unable to find source '" + getSourceConnectorName() + "' for chain connector");
     }
 
-    // Chain the rest...
-    //
     ChainDataContext chainDataContext = createChainContext(dataContext);
     LeanConnector lastConnector = chainDataContext.getLastConnector();
 
@@ -126,37 +109,30 @@ public class LeanChainConnector extends LeanBaseConnector implements ILeanConnec
     }
     finishedQueue = new ArrayBlockingQueue<>(10);
 
-    // Add a row listener to the last connector to pass the data to the listeners of this connector
-    //
-    lastConnector.getConnector().addRowListener(new PassthroughRowListener(this, finishedQueue));
-
-    // Now signal start streaming...
-    //
-    lastConnector.getConnector().startStreaming(chainDataContext);
+    ILeanConnector last = lastConnector.getConnector();
+    attachToSource(last, new PassthroughRowListener(this, finishedQueue));
+    last.startStreaming(chainDataContext);
   }
 
   @Override
   public void waitUntilFinished() throws LeanException {
     try {
-      while (finishedQueue.poll(1, TimeUnit.DAYS) == null) {
-        ;
+      while (finishedQueue != null && finishedQueue.poll(1, TimeUnit.DAYS) == null) {
+        // wait for end-of-stream signal
       }
     } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       throw new LeanException("Interrupted while waiting for more rows in connector", e);
+    } finally {
+      detachFromSource();
+      finishedQueue = null;
     }
-    finishedQueue = null;
   }
 
-  /**
-   * Gets connectors
-   *
-   * @return value of connectors
-   */
   public List<ILeanConnector> getConnectors() {
     return connectors;
   }
 
-  /** @param connectors The connectors to set */
   public void setConnectors(List<ILeanConnector> connectors) {
     this.connectors = connectors;
   }

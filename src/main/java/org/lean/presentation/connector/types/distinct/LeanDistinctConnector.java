@@ -2,6 +2,9 @@ package org.lean.presentation.connector.types.distinct;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.hop.core.exception.HopValueException;
 import org.apache.hop.core.row.IRowMeta;
 import org.lean.core.ILeanRowListener;
@@ -12,16 +15,18 @@ import org.lean.presentation.connector.type.LeanBaseConnector;
 import org.lean.presentation.connector.type.LeanConnectorPlugin;
 import org.lean.presentation.datacontext.IDataContext;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-/** Select distinct values from a source connector */
+/**
+ * Suppresses rows that are equal to the immediately previous row (adjacent-duplicate removal).
+ *
+ * <p>This is not a full-set DISTINCT: non-adjacent duplicates still pass. For global uniqueness,
+ * sort first (e.g. via {@code SortConnector}) so equal rows are adjacent.
+ */
 @JsonDeserialize(as = LeanDistinctConnector.class)
 @LeanConnectorPlugin(
     id = "DistinctConnector",
     name = "Select distinct rows",
-    description = "Only outputs unique rows")
+    description =
+        "Drops rows equal to the previous row (adjacent distinct); sort first for full uniqueness")
 public class LeanDistinctConnector extends LeanBaseConnector implements ILeanConnector {
 
   @JsonIgnore protected ArrayBlockingQueue<Object> finishedQueue;
@@ -33,7 +38,6 @@ public class LeanDistinctConnector extends LeanBaseConnector implements ILeanCon
 
   public LeanDistinctConnector(LeanDistinctConnector c) {
     super(c);
-    // Nothing specific beyond the base connector metadata
   }
 
   @Override
@@ -45,8 +49,7 @@ public class LeanDistinctConnector extends LeanBaseConnector implements ILeanCon
               + getSourceConnectorName()
               + "' for distinct connector");
     }
-    IRowMeta sourceRowMeta = connector.getConnector().describeOutput(dataContext);
-    return sourceRowMeta;
+    return connector.getConnector().describeOutput(dataContext);
   }
 
   public LeanDistinctConnector clone() {
@@ -55,15 +58,12 @@ public class LeanDistinctConnector extends LeanBaseConnector implements ILeanCon
 
   @Override
   public void startStreaming(IDataContext dataContext) throws LeanException {
-
-    // which connector do we read from?
-    //
     LeanConnector connector = dataContext.getConnector(getSourceConnectorName());
     if (connector == null) {
       throw new LeanException(
           "Unable to find connector source '"
               + getSourceConnectorName()
-              + "' for passthrough connector");
+              + "' for distinct connector");
     }
 
     if (finishedQueue != null) {
@@ -72,65 +72,55 @@ public class LeanDistinctConnector extends LeanBaseConnector implements ILeanCon
     }
     finishedQueue = new ArrayBlockingQueue<>(10);
 
-    // What does the input look like?
-    //
-    final IRowMeta inputRowMeta = connector.describeOutput(dataContext);
-
     AtomicBoolean firstRow = new AtomicBoolean(true);
+    ILeanRowListener listener =
+        new ILeanRowListener() {
+          private Object[] previousRow = null;
 
-    // Add a row listener to the parent connector
-    //
-    connector
-        .getConnector()
-        .addRowListener(
-            new ILeanRowListener() {
-              private Object[] previousRow = null;
+          @Override
+          public void rowReceived(IRowMeta rowMeta, Object[] rowData) throws LeanException {
+            if (rowData == null) {
+              outputDone();
+              finishedQueue.add(new Object());
+              return;
+            }
 
-              @Override
-              public void rowReceived(IRowMeta rowMeta, Object[] rowData) throws LeanException {
-
-                if (rowData == null) {
-                  outputDone();
-                  finishedQueue.add(new Object());
-                  return;
-                }
-
-                if (firstRow.get()) {
-                  passToRowListeners(rowMeta, rowData);
-                  firstRow.set(false);
-                } else {
-                  // Compare all values in the row
-                  //
-                  int result;
-                  try {
-                    result = rowMeta.compare(rowData, previousRow);
-                  } catch (HopValueException e) {
-                    throw new LeanException("Error comparing rows of data", e);
-                  }
-                  // Only pass different rows
-                  if (result != 0) {
-                    passToRowListeners(rowMeta, rowData);
-                  }
-                }
-
-                previousRow = rowData;
+            if (firstRow.get()) {
+              passToRowListeners(rowMeta, rowData);
+              firstRow.set(false);
+            } else {
+              int result;
+              try {
+                result = rowMeta.compare(rowData, previousRow);
+              } catch (HopValueException e) {
+                throw new LeanException("Error comparing rows of data", e);
               }
-            });
+              if (result != 0) {
+                passToRowListeners(rowMeta, rowData);
+              }
+            }
 
-    // Now signal start streaming...
-    //
-    connector.getConnector().startStreaming(dataContext);
+            previousRow = rowData;
+          }
+        };
+
+    ILeanConnector source = connector.getConnector();
+    attachToSource(source, listener);
+    source.startStreaming(dataContext);
   }
 
   @Override
   public void waitUntilFinished() throws LeanException {
     try {
-      while (finishedQueue.poll(1, TimeUnit.DAYS) == null) {
-        ;
+      while (finishedQueue != null && finishedQueue.poll(1, TimeUnit.DAYS) == null) {
+        // wait for end-of-stream signal
       }
     } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       throw new LeanException("Interrupted while waiting for more rows in connector", e);
+    } finally {
+      detachFromSource();
+      finishedQueue = null;
     }
-    finishedQueue = null;
   }
 }

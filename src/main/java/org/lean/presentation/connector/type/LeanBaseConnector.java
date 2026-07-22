@@ -19,6 +19,15 @@ public abstract class LeanBaseConnector implements ILeanConnector {
 
   @JsonIgnore protected List<ILeanRowListener> rowListeners;
 
+  /**
+   * Source connector this transform attached a listener to (runtime only; not metadata). Cleared
+   * after {@link #detachFromSource()}.
+   */
+  @JsonIgnore private transient ILeanConnector attachedSource;
+
+  /** Listener registered on {@link #attachedSource} (runtime only). */
+  @JsonIgnore private transient ILeanRowListener attachedListener;
+
   public LeanBaseConnector(String pluginId) {
     this.pluginId = pluginId;
     rowListeners = new ArrayList<>();
@@ -30,6 +39,37 @@ public abstract class LeanBaseConnector implements ILeanConnector {
     // We don't copy over the listeners!
     //
     this.rowListeners = new ArrayList<>();
+  }
+
+  /**
+   * Register a row listener on a source connector and remember it so {@link #detachFromSource()}
+   * can clean up after streaming.
+   */
+  protected void attachToSource(ILeanConnector source, ILeanRowListener listener)
+      throws LeanException {
+    if (source == null) {
+      throw new LeanException("Cannot attach to a null source connector");
+    }
+    if (listener == null) {
+      throw new LeanException("Cannot attach a null row listener");
+    }
+    // Replace any previous attachment to avoid stacking listeners on reuse.
+    detachFromSource();
+    source.addRowListener(listener);
+    this.attachedSource = source;
+    this.attachedListener = listener;
+  }
+
+  /**
+   * Remove the listener previously registered with {@link #attachToSource(ILeanConnector,
+   * ILeanRowListener)}. Safe to call multiple times.
+   */
+  protected void detachFromSource() {
+    if (attachedSource != null && attachedListener != null) {
+      attachedSource.removeDataListener(attachedListener);
+    }
+    attachedSource = null;
+    attachedListener = null;
   }
 
   public abstract LeanBaseConnector clone();

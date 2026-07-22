@@ -22,13 +22,28 @@ Source connectors produce data. Transform connectors set `sourceConnectorName` a
 | `SqlConnector` | `LeanSqlConnector` | SQL against a `LeanDatabaseConnection` in metadata |
 | `LeanRestConnector` | `LeanRestConnector` | HTTP JSON → rows |
 | `SortConnector` | `LeanSortConnector` | Sort by columns / `LeanSortMethod` |
-| `DistinctConnector` | `LeanDistinctConnector` | Drop rows equal to the previous row |
+| `DistinctConnector` | `LeanDistinctConnector` | **Adjacent** distinct: drops rows equal to the previous row only (sort first for full uniqueness) |
 | `SelectionConnector` | `LeanSelectionConnector` | Project a subset of fields |
 | `PassthroughConnector` | `LeanPassthroughConnector` | Pass all rows from source |
 | `ChainConnector` | `LeanChainConnector` | Encapsulate a pipeline of connectors |
 | Metadata connectors | `LeanMetadata*Connector` | List Hop/Lean metadata types and elements |
 
-Filter support: `LeanSimpleFilterConnector` (field equals set of values). Check annotation/`@LeanConnectorPlugin` for discovery ID when chaining.
+### Simple filter
+
+`LeanSimpleFilterConnector` keeps rows by **exact string equality**:
+
+- Multiple filter entries on **different fields** are combined with **AND** (all must match).
+- Multiple allowed values for the **same field** act as **OR** within that field.
+
+There are no operators such as “greater than” or regex yet.
+
+### Transform listener cleanup
+
+Sort, filter, distinct, selection, passthrough, and chain attach a row listener to their source (or last chain step). After streaming finishes, `waitUntilFinished()` **detaches** that listener so reused source instances do not accumulate listeners.
+
+### REST
+
+`LeanRestConnector` uses the **JDK `HttpClient`** and **Jackson**. Empty `body` → GET; non-empty `body` → POST with JSON. Map fields with JSON tags to Hop types (`String`, `Integer`, `Number`, `Boolean`). Treat user-controlled URLs as an SSRF risk.
 
 ## Configuration tips
 

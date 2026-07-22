@@ -14,13 +14,20 @@ import org.apache.hop.core.exception.HopException;
 import org.apache.hop.core.row.IRowMeta;
 import org.apache.hop.core.row.IValueMeta;
 import org.apache.hop.core.variables.IVariables;
+import org.lean.core.ILeanRowListener;
 import org.lean.core.exception.LeanException;
 import org.lean.presentation.connector.LeanConnector;
 import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
 import org.lean.presentation.datacontext.IDataContext;
 
-/** Simple filter for rows with specific field values */
+/**
+ * Filters rows by exact string equality on field values.
+ *
+ * <p>When multiple {@link SimpleFilterValue}s are configured, a row must match <strong>all</strong>
+ * of them (logical AND). For a single field, multiple allowed values act as OR within that field
+ * (the row value must be in the set of filter values for that field).
+ */
 @JsonDeserialize(as = LeanSimpleFilterConnector.class)
 public class LeanSimpleFilterConnector extends LeanBaseConnector implements ILeanConnector {
 
@@ -59,14 +66,11 @@ public class LeanSimpleFilterConnector extends LeanBaseConnector implements ILea
               + getSourceConnectorName()
               + "' for simple filter connector");
     }
-    IRowMeta sourceRowMeta = connector.getConnector().describeOutput(dataContext);
-    return sourceRowMeta;
+    return connector.getConnector().describeOutput(dataContext);
   }
 
   @Override
   public void startStreaming(final IDataContext dataContext) throws LeanException {
-    // which connector do we read from?
-    //
     LeanConnector connector = dataContext.getConnector(getSourceConnectorName());
     if (connector == null) {
       throw new LeanException(
@@ -81,13 +85,9 @@ public class LeanSimpleFilterConnector extends LeanBaseConnector implements ILea
     }
     finishedQueue = new ArrayBlockingQueue<>(10);
 
-    // What does the input look like?
-    //
     final IRowMeta inputRowMeta = connector.describeOutput(dataContext);
     final IVariables variables = dataContext.getVariables();
 
-    // What are the simple filter row indexes?
-    //
     Map<String, Set<String>> fieldFiltersMap = new HashMap<>();
 
     int[] valueIndexes = new int[filterValues.size()];
@@ -108,81 +108,62 @@ public class LeanSimpleFilterConnector extends LeanBaseConnector implements ILea
       values.add(variables.resolve(filterValue.getFilterValue()));
     }
 
-    // Add a row listener to the parent connector
-    //
-    connector
-        .getConnector()
-        .addRowListener(
-            (rowMeta, rowData) -> {
-              if (rowData == null) {
-                outputDone();
-                finishedQueue.add(new Object());
-                return;
+    ILeanRowListener listener =
+        (rowMeta, rowData) -> {
+          if (rowData == null) {
+            outputDone();
+            finishedQueue.add(new Object());
+            return;
+          }
+
+          boolean pass = true;
+          for (int i = 0; i < valueIndexes.length; i++) {
+            int valueIndex = valueIndexes[i];
+            IValueMeta valueMeta = inputRowMeta.getValueMeta(valueIndex);
+            Set<String> allowed =
+                fieldFiltersMap.computeIfAbsent(valueMeta.getName(), e -> new HashSet<>());
+
+            try {
+              String rowValue = valueMeta.getString(rowData[valueIndex]);
+              if (!allowed.contains(rowValue)) {
+                pass = false;
+                break;
               }
+            } catch (HopException e) {
+              throw new LeanException(
+                  "Unable to convert simple filter input row value '" + valueMeta, e);
+            }
+          }
 
-              boolean pass = true;
-              for (int i = 0; i < valueIndexes.length; i++) {
-                SimpleFilterValue simpleFilterValue = filterValues.get(i);
-                int valueIndex = valueIndexes[i];
+          if (pass) {
+            passToRowListeners(rowMeta, rowData);
+          }
+        };
 
-                IValueMeta valueMeta = inputRowMeta.getValueMeta(valueIndex);
-
-                // What are the filter values for this field?
-                //
-                Set<String> filterValues =
-                    fieldFiltersMap.computeIfAbsent(valueMeta.getName(), e -> new HashSet<>());
-
-                try {
-                  String rowValue = valueMeta.getString(rowData[valueIndex]);
-
-                  if (!filterValues.contains(rowValue)) {
-                    pass = false;
-
-                    // stop looking
-                    break;
-                  }
-                } catch (HopException e) {
-                  throw new LeanException(
-                      "Unable to convert simple filter input row value '" + valueMeta.toString(),
-                      e);
-                }
-              }
-
-              if (pass) {
-                passToRowListeners(rowMeta, rowData);
-              }
-            });
-
-    // Now signal start streaming...
-    //
-    connector.getConnector().startStreaming(dataContext);
+    ILeanConnector source = connector.getConnector();
+    attachToSource(source, listener);
+    source.startStreaming(dataContext);
   }
 
   @Override
   public void waitUntilFinished() throws LeanException {
     try {
-      while (finishedQueue.poll(1, TimeUnit.DAYS) == null) {
-        // This loop will stop once the last row is read in the row listener and an object is added
-        // to the queue.
+      while (finishedQueue != null && finishedQueue.poll(1, TimeUnit.DAYS) == null) {
+        // wait for end-of-stream signal
       }
     } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       throw new LeanException("Interrupted while waiting for more rows in connector", e);
+    } finally {
+      detachFromSource();
+      finishedQueue = null;
     }
-    finishedQueue = null;
   }
 
-  /**
-   * Gets filterValues
-   *
-   * @return value of filterValues
-   */
   public List<SimpleFilterValue> getFilterValues() {
     return filterValues;
   }
 
-  /**
-   * @param filterValues The filterValues to set
-   */
   public void setFilterValues(List<SimpleFilterValue> filterValues) {
     this.filterValues = filterValues;
   }

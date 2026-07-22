@@ -2,12 +2,17 @@ package org.lean.presentation.connector.types.selection;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hop.core.row.IRowMeta;
 import org.apache.hop.core.row.IValueMeta;
 import org.apache.hop.core.row.RowDataUtil;
 import org.apache.hop.core.row.RowMeta;
 import org.apache.hop.metadata.api.HopMetadataProperty;
+import org.lean.core.ILeanRowListener;
 import org.lean.core.LeanColumn;
 import org.lean.core.exception.LeanException;
 import org.lean.presentation.connector.LeanConnector;
@@ -15,11 +20,6 @@ import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
 import org.lean.presentation.connector.type.LeanConnectorPlugin;
 import org.lean.presentation.datacontext.IDataContext;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 /** Select a bunch of columns from a source connector */
 @JsonDeserialize(as = LeanSelectionConnector.class)
@@ -66,8 +66,6 @@ public class LeanSelectionConnector extends LeanBaseConnector implements ILeanCo
     }
     IRowMeta sourceRowMeta = connector.getConnector().describeOutput(dataContext);
 
-    // Only pass the selected columns
-    //
     IRowMeta rowMeta = new RowMeta();
     for (LeanColumn column : columns) {
       IValueMeta sourceValueMeta = sourceRowMeta.searchValueMeta(column.getColumnName());
@@ -95,15 +93,12 @@ public class LeanSelectionConnector extends LeanBaseConnector implements ILeanCo
 
   @Override
   public void startStreaming(IDataContext dataContext) throws LeanException {
-
-    // which connector do we read from?
-    //
     LeanConnector connector = dataContext.getConnector(getSourceConnectorName());
     if (connector == null) {
       throw new LeanException(
           "Unable to find connector source '"
               + getSourceConnectorName()
-              + "' for passthrough connector");
+              + "' for selection connector");
     }
 
     if (finishedQueue != null) {
@@ -112,70 +107,54 @@ public class LeanSelectionConnector extends LeanBaseConnector implements ILeanCo
     }
     finishedQueue = new ArrayBlockingQueue<>(10);
 
-    // What does the input look like?
-    //
     final IRowMeta inputRowMeta = connector.describeOutput(dataContext);
-
-    // What does the output look like?
-    //
     final IRowMeta outputRowMeta = describeOutput(dataContext);
 
-    // Calculate column indexes
-    //
-    final int columnIndexes[] = new int[columns.size()];
+    final int[] columnIndexes = new int[columns.size()];
     for (int i = 0; i < columnIndexes.length; i++) {
       columnIndexes[i] = inputRowMeta.indexOfValue(columns.get(i).getColumnName());
     }
 
-    // Add a row listener to the parent connector
-    //
-    connector
-        .getConnector()
-        .addRowListener(
-            (rowMeta, rowData) -> {
-              if (rowData == null) {
-                outputDone();
-                finishedQueue.add(new Object());
-                return;
-              }
+    ILeanRowListener listener =
+        (rowMeta, rowData) -> {
+          if (rowData == null) {
+            outputDone();
+            finishedQueue.add(new Object());
+            return;
+          }
 
-              // Create a new row
-              //
-              Object[] outputRowData = RowDataUtil.allocateRowData(outputRowMeta.size());
-              for (int i = 0; i < outputRowMeta.size(); i++) {
-                outputRowData[i] = rowData[columnIndexes[i]];
-              }
+          Object[] outputRowData = RowDataUtil.allocateRowData(outputRowMeta.size());
+          for (int i = 0; i < outputRowMeta.size(); i++) {
+            outputRowData[i] = rowData[columnIndexes[i]];
+          }
 
-              passToRowListeners(outputRowMeta, outputRowData);
-            });
+          passToRowListeners(outputRowMeta, outputRowData);
+        };
 
-    // Now signal start streaming...
-    //
-    connector.getConnector().startStreaming(dataContext);
+    ILeanConnector source = connector.getConnector();
+    attachToSource(source, listener);
+    source.startStreaming(dataContext);
   }
 
   @Override
   public void waitUntilFinished() throws LeanException {
     try {
-      while (finishedQueue.poll(1, TimeUnit.DAYS) == null) {
-        ;
+      while (finishedQueue != null && finishedQueue.poll(1, TimeUnit.DAYS) == null) {
+        // wait for end-of-stream signal
       }
     } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       throw new LeanException("Interrupted while waiting for more rows in connector", e);
+    } finally {
+      detachFromSource();
+      finishedQueue = null;
     }
-    finishedQueue = null;
   }
 
-  /**
-   * Gets columns
-   *
-   * @return value of columns
-   */
   public List<LeanColumn> getColumns() {
     return columns;
   }
 
-  /** @param columns The columns to set */
   public void setColumns(List<LeanColumn> columns) {
     this.columns = columns;
   }

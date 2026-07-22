@@ -2,6 +2,8 @@ package org.lean.presentation.connector.types.passthrough;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import org.apache.hop.core.row.IRowMeta;
 import org.lean.core.exception.LeanException;
 import org.lean.presentation.connector.LeanConnector;
@@ -9,9 +11,6 @@ import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanBaseConnector;
 import org.lean.presentation.connector.type.LeanConnectorPlugin;
 import org.lean.presentation.datacontext.IDataContext;
-
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 @JsonDeserialize(as = LeanPassthroughConnector.class)
 @LeanConnectorPlugin(
@@ -55,9 +54,6 @@ public class LeanPassthroughConnector extends LeanBaseConnector implements ILean
 
   @Override
   public void startStreaming(IDataContext dataContext) throws LeanException {
-
-    // which connector do we read from?
-    //
     LeanConnector sourceConnector = dataContext.getConnector(getSourceConnectorName());
     if (sourceConnector == null) {
       throw new LeanException(
@@ -72,23 +68,23 @@ public class LeanPassthroughConnector extends LeanBaseConnector implements ILean
     }
     finishedQueue = new ArrayBlockingQueue<>(10);
 
-    // Add a row listener to the parent connector
-    //
-    sourceConnector.getConnector().addRowListener(new PassthroughRowListener(this, finishedQueue));
-
-    // Now signal start streaming...
-    //
-    sourceConnector.getConnector().startStreaming(dataContext);
+    ILeanConnector source = sourceConnector.getConnector();
+    attachToSource(source, new PassthroughRowListener(this, finishedQueue));
+    source.startStreaming(dataContext);
   }
 
   @Override
   public void waitUntilFinished() throws LeanException {
     try {
-      while (finishedQueue.poll(1, TimeUnit.DAYS) == null)
-        ;
+      while (finishedQueue != null && finishedQueue.poll(1, TimeUnit.DAYS) == null) {
+        // wait for end-of-stream signal
+      }
     } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       throw new LeanException("Interrupted while waiting for more rows in connector", e);
+    } finally {
+      detachFromSource();
+      finishedQueue = null;
     }
-    finishedQueue = null;
   }
 }
