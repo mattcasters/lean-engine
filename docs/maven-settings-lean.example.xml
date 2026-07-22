@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copy to ~/.m2/settings.xml (or merge the <servers> / <profiles> blocks).
+  Replace YOUR_NEXUS_USERNAME / YOUR_NEXUS_PASSWORD_OR_TOKEN.
+  Never commit a filled-in copy of this file.
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+
+  <servers>
+    <server>
+      <id>lean</id>
+      <username>YOUR_NEXUS_USERNAME</username>
+      <password>YOUR_NEXUS_PASSWORD_OR_TOKEN</password>
+    </server>
+  </servers>
+
+  <profiles>
+    <profile>
+      <id>lean-nexus</id>
+      <repositories>
+        <repository>
+          <id>lean</id>
+          <name>Data Hopper Lean</name>
+          <url>https://repository.data-hopper.com/repository/lean/</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+
+  <activeProfiles>
+    <activeProfile>lean-nexus</activeProfile>
+  </activeProfiles>
+</settings>

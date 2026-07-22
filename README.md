@@ -52,7 +52,13 @@ mvn clean install
 | [docs/components.md](docs/components.md) | Built-in visual components |
 | [docs/api.md](docs/api.md) | Library API and embedding |
 | [docs/ecosystem.md](docs/ecosystem.md) | Related repositories |
+| [docs/publishing.md](docs/publishing.md) | Deploy snapshots/releases to Nexus (`lean`) |
 | [docs/review/](docs/review/) | Code review notes |
+
+### Publish to Nexus
+
+Artifacts deploy to **https://repository.data-hopper.com/repository/lean/**  
+using Maven server id **`lean`**. Put credentials in **`~/.m2/settings.xml`** (never in git). See [docs/publishing.md](docs/publishing.md).
 
 ## Ecosystem
 

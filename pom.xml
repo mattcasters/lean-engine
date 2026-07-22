@@ -49,21 +49,23 @@
     <fop.version>2.8</fop.version>
     <lombok.version>1.18.36</lombok.version>
 
-    <!-- Override for private artifactory (server id hop-plugins-local in ~/.m2/settings.xml) -->
-    <hop.plugins.local.snapshot.url>https://localhost/repository/maven-snapshots/</hop.plugins.local.snapshot.url>
-    <hop.plugins.local.release.url>https://localhost/repository/maven-releases/</hop.plugins.local.release.url>
+    <!--
+      Nexus hosted repo "lean" at repository.data-hopper.com (version policy should allow MIXED
+      or use the same URL for both if MIXED). Server id "lean" must match ~/.m2/settings.xml.
+    -->
+    <lean.nexus.url>https://repository.data-hopper.com/repository/lean/</lean.nexus.url>
   </properties>
 
   <distributionManagement>
     <repository>
-      <id>hop-plugins-local</id>
-      <name>Hop plugins local releases</name>
-      <url>${hop.plugins.local.release.url}</url>
+      <id>lean</id>
+      <name>Data Hopper Lean releases</name>
+      <url>${lean.nexus.url}</url>
     </repository>
     <snapshotRepository>
-      <id>hop-plugins-local</id>
-      <name>Hop plugins local snapshots</name>
-      <url>${hop.plugins.local.snapshot.url}</url>
+      <id>lean</id>
+      <name>Data Hopper Lean snapshots</name>
+      <url>${lean.nexus.url}</url>
     </snapshotRepository>
   </distributionManagement>
 
