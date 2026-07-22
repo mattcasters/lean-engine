@@ -6,19 +6,19 @@ import org.apache.hop.core.plugins.PluginRegistry;
 import org.apache.hop.core.variables.IVariables;
 import org.apache.hop.core.variables.Variables;
 import org.apache.hop.metadata.serializer.memory.MemoryMetadataProvider;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.lean.presentation.component.type.LeanComponentPluginType;
 import org.lean.presentation.connector.type.LeanConnectorPluginType;
 
 import java.util.List;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LeanEnvironmentTest {
 
-  @Before
+  @BeforeEach
   public void before() throws Exception {
 
     MemoryMetadataProvider metadataProvider = new MemoryMetadataProvider();
@@ -36,23 +36,23 @@ public class LeanEnvironmentTest {
     // Check Component plugin type...
     //
     IPluginType leanComponentPluginType = registry.getPluginType(LeanComponentPluginType.class);
-    assertNotNull("Component plugin type not found ", leanComponentPluginType);
+    assertNotNull(leanComponentPluginType, "Component plugin type not found");
     IPlugin leanLabelComponent =
         registry.findPluginWithId(LeanComponentPluginType.class, "LeanLabelComponent");
-    assertNotNull("Label component not found", leanLabelComponent);
+    assertNotNull(leanLabelComponent, "Label component not found");
 
     List<IPlugin> componentPlugins = registry.getPlugins(LeanComponentPluginType.class);
-    assertTrue("Plugins list empty", !componentPlugins.isEmpty());
+    assertTrue(!componentPlugins.isEmpty(), "Plugins list empty");
 
     // Check connector plugin type...
     //
     IPluginType leanConnectorPluginType = registry.getPluginType(LeanConnectorPluginType.class);
-    assertNotNull("Data connector plugin type not found ", leanConnectorPluginType);
+    assertNotNull(leanConnectorPluginType, "Data connector plugin type not found");
     IPlugin sampleDataConnector =
         registry.findPluginWithId(LeanConnectorPluginType.class, "SampleDataConnector");
-    assertNotNull("Sample data connector plugin type not found", sampleDataConnector);
+    assertNotNull(sampleDataConnector, "Sample data connector plugin type not found");
 
     List<IPlugin> connectorPlugins = registry.getPlugins(LeanConnectorPluginType.class);
-    assertTrue("Plugins list empty", !connectorPlugins.isEmpty());
+    assertTrue(!connectorPlugins.isEmpty(), "Plugins list empty");
   }
 }

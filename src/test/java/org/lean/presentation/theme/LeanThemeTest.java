@@ -3,9 +3,9 @@ package org.lean.presentation.theme;
 import org.apache.hop.metadata.api.IHopMetadataProvider;
 import org.apache.hop.metadata.api.IHopMetadataSerializer;
 import org.apache.hop.metadata.serializer.memory.MemoryMetadataProvider;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.lean.util.TestUtil;
 
 public class LeanThemeTest {
@@ -19,7 +19,7 @@ public class LeanThemeTest {
     return theme;
   }
 
-  @Before
+  @BeforeEach
   public void before() throws Exception {
     metadataProvider = new MemoryMetadataProvider();
   }
@@ -40,6 +40,6 @@ public class LeanThemeTest {
     TestUtil.assertEqualThemes(theme, verify);
   }
 
-  @After
+  @AfterEach
   public void after() throws Exception {}
 }

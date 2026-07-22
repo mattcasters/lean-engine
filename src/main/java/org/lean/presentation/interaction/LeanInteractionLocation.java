@@ -2,7 +2,7 @@ package org.lean.presentation.interaction;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.LeanColumn;
 import org.lean.core.draw.DrawnItem;

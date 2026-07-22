@@ -1,8 +1,8 @@
 package org.lean.render.svg;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.junit.Test;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Test;
 import org.lean.core.Constants;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.theme.LeanTheme;

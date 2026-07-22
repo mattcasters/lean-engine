@@ -1,7 +1,7 @@
 package org.lean.presentation.component.types.svg;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hop.core.svg.HopSvgGraphics2D;
 import org.apache.hop.core.svg.SvgCache;
 import org.apache.hop.core.svg.SvgCacheEntry;

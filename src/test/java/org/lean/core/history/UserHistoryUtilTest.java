@@ -2,13 +2,13 @@ package org.lean.core.history;
 
 import org.apache.hop.metadata.api.IHopMetadataProvider;
 import org.apache.hop.metadata.serializer.memory.MemoryMetadataProvider;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.lean.core.Constants;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class UserHistoryUtilTest {
 
@@ -79,6 +79,6 @@ public class UserHistoryUtilTest {
 
     List<LeanUserHistoryAction> patActions =
         UserHistoryUtil.getUserHistoryActions(metadataProvider, "pat");
-    Assert.assertEquals(Constants.USER_ACTION_HISTORY_SIZE, patActions.size());
+    Assertions.assertEquals(Constants.USER_ACTION_HISTORY_SIZE, patActions.size());
   }
 }

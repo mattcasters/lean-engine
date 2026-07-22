@@ -4,10 +4,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.lean</groupId>
-  <version>0.0.13-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <artifactId>lean-engine</artifactId>
   <name>${project.artifactId}</name>
-  <description>Lean Engine for ANalytics</description>
+  <description>Lean Enterprise Analytics engine — server-side data acquisition and SVG presentation rendering</description>
+  <url>https://github.com/mattcasters/lean-engine</url>
 
   <packaging>jar</packaging>
 
@@ -20,24 +21,33 @@
     </license>
   </licenses>
 
-  <properties>
-    <hop.version>2.3.0-SNAPSHOT</hop.version>
-    <jandex.version>3.0.5</jandex.version>
+  <scm>
+    <connection>scm:git:https://github.com/mattcasters/lean-engine.git</connection>
+    <developerConnection>scm:git:git@github.com:mattcasters/lean-engine.git</developerConnection>
+    <url>https://github.com/mattcasters/lean-engine</url>
+  </scm>
 
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
+  <properties>
+    <hop.version>2.18.1</hop.version>
+    <jandex.version>3.5.3</jandex.version>
+
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.build.timestamp.format>yyyy-MM-dd hh.mm.ss</maven.build.timestamp.format>
 
-    <jandex-maven-plugin.version>1.2.3</jandex-maven-plugin.version>
+    <jandex-maven-plugin.version>3.5.3</jandex-maven-plugin.version>
+    <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+    <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+    <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
+    <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
 
-    <mockito-all.version>1.9.5</mockito-all.version>
-    <junit.version>4.13.2</junit.version>
-    <batik.version>1.16</batik.version>
-    <jackson.version>2.14.1</jackson.version>
+    <junit.version>5.11.4</junit.version>
+    <batik.version>1.19</batik.version>
+    <jackson.version>2.18.2</jackson.version>
 
-    <jetty-version>9.4.24.v20191120</jetty-version>
     <pdfbox.version>2.0.27</pdfbox.version>
     <fop.version>2.8</fop.version>
+    <lombok.version>1.18.36</lombok.version>
   </properties>
 
   <repositories>
@@ -79,55 +89,72 @@
   <build>
     <defaultGoal>install</defaultGoal>
 
-
-    <sourceDirectory>src/main/java</sourceDirectory>
-
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <includes>
-          <include>**/*.properties</include>
-          <include>**/*.xul</include>
-          <include>**/*.xml</include>
-          <include>**/*.svg</include>
-        </includes>
-      </resource>
-
-      <resource>
-        <directory>src/main/webapp</directory>
-        <includes>
-          <include>**/*.*</include>
-        </includes>
-      </resource>
-
-      <resource>
-        <directory>src/main/java</directory>
-        <includes>
-          <include>**/*.properties</include>
-          <include>**/*.xul</include>
-          <include>**/*.xml</include>
-          <include>**/*.svg</include>
-        </includes>
-      </resource>
-
-    </resources>
-
-    <testSourceDirectory>src/test/java</testSourceDirectory>
-    <testResources>
-      <testResource>
-        <directory>src/test/resources</directory>
-      </testResource>
-      <testResource>
-        <directory>src/resources</directory>
-      </testResource>
-    </testResources>
-
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven-compiler-plugin.version}</version>
+        <configuration>
+          <release>${maven.compiler.release}</release>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${lombok.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven-surefire-plugin.version}</version>
+        <configuration>
+          <!-- Hop PluginRegistry/JarCache are not safe for concurrent multi-class init -->
+          <forkCount>1</forkCount>
+          <reuseForks>true</reuseForks>
+          <parallel>none</parallel>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>${maven-source-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven-javadoc-plugin.version}</version>
+        <configuration>
+          <doclint>none</doclint>
+          <failOnError>false</failOnError>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
           <execution>
-            <phase>install</phase>
+            <phase>package</phase>
             <goals>
               <goal>copy-dependencies</goal>
             </goals>
@@ -140,7 +167,7 @@
       </plugin>
 
       <plugin>
-        <groupId>org.jboss.jandex</groupId>
+        <groupId>io.smallrye</groupId>
         <artifactId>jandex-maven-plugin</artifactId>
         <version>${jandex-maven-plugin.version}</version>
         <executions>
@@ -149,8 +176,6 @@
             <goals>
               <goal>jandex</goal>
             </goals>
-            <configuration>
-            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -159,7 +184,14 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.jboss</groupId>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.smallrye</groupId>
       <artifactId>jandex</artifactId>
       <version>${jandex.version}</version>
     </dependency>
@@ -168,40 +200,7 @@
       <groupId>org.apache.hop</groupId>
       <artifactId>hop-core</artifactId>
       <version>${hop.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.ws.rs</groupId>
-          <artifactId>jsr311-api</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
-
-    <dependency>
-      <groupId>org.apache.hop</groupId>
-      <artifactId>hop-databases-h2</artifactId>
-      <version>${hop.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.ws.rs</groupId>
-          <artifactId>jsr311-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <version>3.1.0</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>javax.ws.rs</groupId>
-      <artifactId>javax.ws.rs-api</artifactId>
-      <version>2.1.1</version>
-    </dependency>
-
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -239,18 +238,16 @@
       <artifactId>batik-util</artifactId>
       <version>${batik.version}</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>batik-transcoder</artifactId>
+      <version>${batik.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.pdfbox</groupId>
       <artifactId>pdfbox</artifactId>
       <version>${pdfbox.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.github.insubstantial</groupId>
-      <artifactId>flamingo</artifactId>
-      <version>7.3</version>
     </dependency>
 
     <dependency>
@@ -260,21 +257,44 @@
     </dependency>
 
     <dependency>
-      <groupId>com.googlecode.json-simple</groupId>
-      <artifactId>json-simple</artifactId>
-      <version>1.1.1</version>
-    </dependency>
-
-    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-math3</artifactId>
       <version>3.6.1</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.17.0</version>
+    </dependency>
 
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>1.1.1</version>
+    </dependency>
+
+    <!-- REST connector HTTP client -->
+    <dependency>
+      <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-client</artifactId>
+      <version>3.1.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.connectors</groupId>
+      <artifactId>jersey-apache-connector</artifactId>
+      <version>3.1.9</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.ws.rs</groupId>
+      <artifactId>jakarta.ws.rs-api</artifactId>
+      <version>3.1.0</version>
+    </dependency>
+
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
@@ -282,46 +302,16 @@
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
-      <version>2.1.214</version>
+      <version>2.2.224</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.apache.hop</groupId>
-      <artifactId>hop-databases-oracle</artifactId>
+      <artifactId>hop-databases-h2</artifactId>
       <version>${hop.version}</version>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.ws.rs</groupId>
-          <artifactId>jsr311-api</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
-    <dependency>
-      <groupId>org.apache.hop</groupId>
-      <artifactId>hop-databases-mysql</artifactId>
-      <version>${hop.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.ws.rs</groupId>
-          <artifactId>jsr311-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.glassfish.jersey.core</groupId>
-      <artifactId>jersey-client</artifactId>
-      <version>3.1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.glassfish.jersey.connectors</groupId>
-      <artifactId>jersey-apache-connector</artifactId>
-      <version>3.1.0</version>
-    </dependency>
-
-
   </dependencies>
 
 </project>

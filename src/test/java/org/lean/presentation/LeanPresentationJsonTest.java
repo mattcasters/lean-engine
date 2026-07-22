@@ -5,9 +5,9 @@ import org.apache.hop.core.variables.Variables;
 import org.apache.hop.metadata.api.IHopMetadataProvider;
 import org.apache.hop.metadata.api.IHopMetadataSerializer;
 import org.apache.hop.metadata.serializer.memory.MemoryMetadataProvider;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.lean.core.LeanEnvironment;
 import org.lean.util.BasePresentationUtil;
 import org.lean.util.TestUtil;
@@ -17,14 +17,14 @@ public class LeanPresentationJsonTest {
   private IHopMetadataProvider metadataProvider;
   private IVariables variables;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     metadataProvider = new MemoryMetadataProvider();
     variables = Variables.getADefaultVariableSpace();
     LeanEnvironment.init();
   }
 
-  @After
+  @AfterEach
   public void tearDown() throws Exception {}
 
   @Test

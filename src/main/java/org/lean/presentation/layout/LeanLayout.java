@@ -1,6 +1,6 @@
 package org.lean.presentation.layout;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.LeanAttachment;
 import org.lean.core.exception.LeanException;

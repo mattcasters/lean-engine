@@ -8,7 +8,7 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.batik.svggen.SVGGraphics2D;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.apache.hop.core.Const;

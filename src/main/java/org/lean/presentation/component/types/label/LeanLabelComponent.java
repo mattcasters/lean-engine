@@ -2,7 +2,7 @@ package org.lean.presentation.component.types.label;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.batik.svggen.SVGGraphics2D;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hop.core.svg.HopSvgGraphics2D;
 import org.apache.hop.metadata.api.HopMetadataProperty;
 import org.lean.core.LeanGeometry;

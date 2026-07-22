@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.batik.svggen.SVGGraphics2D;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hop.core.Const;
 import org.apache.hop.core.RowMetaAndData;
 import org.apache.hop.core.exception.HopException;
@@ -32,6 +32,7 @@ import org.apache.hop.metadata.api.IHopMetadata;
 import org.apache.hop.metadata.api.IHopMetadataProvider;
 import org.lean.core.LeanColorRGB;
 import org.lean.core.LeanGeometry;
+import org.lean.core.LeanJson;
 import org.lean.core.LeanPosition;
 import org.lean.core.draw.DrawnItem;
 import org.lean.core.exception.LeanException;
@@ -105,7 +106,7 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
   }
 
   public static LeanPresentation fromJsonString(String jsonString) throws IOException {
-    return new ObjectMapper().readValue(jsonString, LeanPresentation.class);
+    return LeanJson.createMapper().readValue(jsonString, LeanPresentation.class);
   }
 
   @Override
@@ -118,7 +119,7 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
   }
 
   public String toJsonString(boolean indent) throws JsonProcessingException {
-    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = LeanJson.createMapper();
     if (indent) {
       return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
     } else {

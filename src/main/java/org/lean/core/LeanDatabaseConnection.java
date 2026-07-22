@@ -8,14 +8,11 @@ import org.apache.hop.metadata.api.IHopMetadata;
 import org.lean.core.exception.LeanException;
 import org.lean.core.metastore.IHasIdentity;
 
-import javax.ws.rs.Path;
-
 /** For now we assume sane defaults like JDBC, no generic connections, ... */
 @HopMetadata(
     key = "lean-database-connection",
     name = "Lean Database Connection",
     description = "A description of a connection to a relational database")
-@Path("databases")
 public class LeanDatabaseConnection extends HopMetadataBase implements IHopMetadata, IHasIdentity {
 
   /** This is a reference to Hop database type codes (MYSQL, POSTGRESQL, MSSQL, ORACLE, ...) */

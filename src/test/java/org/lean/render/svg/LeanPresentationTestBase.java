@@ -13,9 +13,9 @@ import org.apache.hop.core.variables.IVariables;
 import org.apache.hop.core.variables.Variables;
 import org.apache.hop.metadata.api.IHopMetadataProvider;
 import org.apache.hop.metadata.serializer.memory.MemoryMetadataProvider;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.lean.core.LeanEnvironment;
 import org.lean.core.log.DurationRequest;
 import org.lean.core.log.LeanMetricsUtil;
@@ -25,9 +25,9 @@ import org.lean.presentation.layout.LeanRenderPage;
 import org.lean.render.IRenderContext;
 import org.lean.render.context.PresentationRenderContext;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Ignore
+@Disabled
 public class LeanPresentationTestBase {
 
   protected IHopMetadataProvider metadataProvider;
@@ -35,7 +35,7 @@ public class LeanPresentationTestBase {
   protected ILoggingObject parent;
   protected String folderName;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
 
     // Create a metastore
@@ -44,9 +44,7 @@ public class LeanPresentationTestBase {
     variables = Variables.getADefaultVariableSpace();
 
     LeanEnvironment.init();
-
-    // PluginRegistry.getInstance().registerPluginClass( H2DatabaseMeta.class.getName(),
-    // DatabasePluginType.class, DatabaseMetaPlugin.class );
+    org.lean.util.BasePresentationUtil.registerTestPlugins();
 
     parent = new LoggingObject("Presentation unit test");
 
@@ -59,10 +57,10 @@ public class LeanPresentationTestBase {
     }
   }
 
-  @After
+  @AfterEach
   public void tearDown() throws Exception {}
 
-  @Ignore
+  @Disabled
   public List<DurationRequest> getStandardDurationRequests() {
     List<DurationRequest> requests = new ArrayList<>();
 
@@ -85,12 +83,12 @@ public class LeanPresentationTestBase {
     return requests;
   }
 
-  @Ignore
+  @Disabled
   protected void testRendering(LeanPresentation presentation, String filename) throws Exception {
     testRendering(presentation, filename, getStandardDurationRequests());
   }
 
-  @Ignore
+  @Disabled
   protected void testRendering(
       LeanPresentation presentation, String filename, List<DurationRequest> durationRequests)
       throws Exception {

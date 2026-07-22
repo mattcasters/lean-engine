@@ -1,6 +1,6 @@
 package org.lean.util;
 
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.lean.core.LeanColorRGB;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.component.LeanComponent;
@@ -10,7 +10,7 @@ import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.page.LeanPage;
 import org.lean.presentation.theme.LeanTheme;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestUtil {
 
@@ -67,14 +67,14 @@ public class TestUtil {
     ILeanComponent verifyIComponent = verifyComponent.getComponent();
 
     assertEquals(originComponent.getName(), verifyComponent.getName());
-    Assert.assertEquals(originComponent.getClipSize(), verifyComponent.getClipSize());
+    Assertions.assertEquals(originComponent.getClipSize(), verifyComponent.getClipSize());
     assertEquals(originIComponent.getPluginId(), verifyIComponent.getPluginId());
     assertEquals(
         originIComponent.getSourceConnectorName(), verifyIComponent.getSourceConnectorName());
     assertEquals(originIComponent.getDefaultColor(), verifyIComponent.getDefaultColor());
     assertEquals(originIComponent.getBackGroundColor(), verifyIComponent.getBackGroundColor());
     assertEquals(originIComponent.getBorderColor(), verifyIComponent.getBorderColor());
-    Assert.assertEquals(originIComponent.getDefaultFont(), verifyIComponent.getDefaultFont());
+    Assertions.assertEquals(originIComponent.getDefaultFont(), verifyIComponent.getDefaultFont());
   }
 
   public static void assertEqualThemes(LeanTheme originTheme, LeanTheme verifyTheme) {
@@ -88,7 +88,7 @@ public class TestUtil {
     }
 
     assertEquals(originTheme.getDefaultColor(), verifyTheme.getDefaultColor());
-    Assert.assertEquals(originTheme.getDefaultFont(), verifyTheme.getDefaultFont());
+    Assertions.assertEquals(originTheme.getDefaultFont(), verifyTheme.getDefaultFont());
     assertEquals(originTheme.getBackgroundColor(), verifyTheme.getBackgroundColor());
     assertEquals(originTheme.getBorderColor(), verifyTheme.getBorderColor());
   }

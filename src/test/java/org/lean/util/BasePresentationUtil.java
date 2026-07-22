@@ -6,8 +6,6 @@ import org.apache.hop.core.exception.HopPluginException;
 import org.apache.hop.core.plugins.PluginRegistry;
 import org.apache.hop.core.variables.IVariables;
 import org.apache.hop.databases.h2.H2DatabaseMeta;
-import org.apache.hop.databases.mysql.MySqlDatabaseMeta;
-import org.apache.hop.databases.oracle.OracleDatabaseMeta;
 import org.apache.hop.metadata.api.IHopMetadataProvider;
 import org.lean.core.LeanAttachment;
 import org.lean.presentation.LeanPresentation;
@@ -39,12 +37,6 @@ public class BasePresentationUtil {
     PluginRegistry.getInstance()
         .registerPluginClass(
             H2DatabaseMeta.class.getName(), DatabasePluginType.class, DatabaseMetaPlugin.class);
-    PluginRegistry.getInstance()
-        .registerPluginClass(
-            OracleDatabaseMeta.class.getName(), DatabasePluginType.class, DatabaseMetaPlugin.class);
-    PluginRegistry.getInstance()
-        .registerPluginClass(
-            MySqlDatabaseMeta.class.getName(), DatabasePluginType.class, DatabaseMetaPlugin.class);
   }
 
   protected static LeanPresentation createBasePresentation(

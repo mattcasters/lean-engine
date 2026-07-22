@@ -1,7 +1,7 @@
 package org.lean.presentation.page;
 
 import junit.framework.TestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.lean.core.exception.LeanException;
 import org.lean.presentation.component.LeanComponent;
 import org.lean.presentation.layout.LeanLayoutBuilder;

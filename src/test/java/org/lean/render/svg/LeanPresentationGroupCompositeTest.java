@@ -1,6 +1,6 @@
 package org.lean.render.svg;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.lean.presentation.LeanPresentation;
 import org.lean.util.GroupCompositePresentationUtil;
 

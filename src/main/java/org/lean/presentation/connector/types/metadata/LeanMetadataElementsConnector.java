@@ -2,7 +2,7 @@ package org.lean.presentation.connector.types.metadata;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hop.core.row.IRowMeta;
 import org.apache.hop.core.row.RowDataUtil;
 import org.apache.hop.core.row.RowMetaBuilder;

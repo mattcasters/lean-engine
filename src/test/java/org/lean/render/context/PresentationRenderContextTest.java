@@ -1,8 +1,8 @@
 package org.lean.render.context;
 
 import org.apache.hop.metadata.serializer.memory.MemoryMetadataProvider;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.lean.core.Constants;
 import org.lean.core.LeanColorRGB;
 import org.lean.core.LeanEnvironment;
@@ -10,12 +10,12 @@ import org.lean.core.exception.LeanException;
 import org.lean.presentation.LeanPresentation;
 import org.lean.presentation.theme.LeanTheme;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 public class PresentationRenderContextTest {
 
-  @Before
+  @BeforeEach
   public void setUp() throws LeanException {
     LeanEnvironment.init();
   }
