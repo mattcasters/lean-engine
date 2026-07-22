@@ -48,7 +48,24 @@
     <pdfbox.version>2.0.27</pdfbox.version>
     <fop.version>2.8</fop.version>
     <lombok.version>1.18.36</lombok.version>
+
+    <!-- Override for private artifactory (server id hop-plugins-local in ~/.m2/settings.xml) -->
+    <hop.plugins.local.snapshot.url>https://localhost/repository/maven-snapshots/</hop.plugins.local.snapshot.url>
+    <hop.plugins.local.release.url>https://localhost/repository/maven-releases/</hop.plugins.local.release.url>
   </properties>
+
+  <distributionManagement>
+    <repository>
+      <id>hop-plugins-local</id>
+      <name>Hop plugins local releases</name>
+      <url>${hop.plugins.local.release.url}</url>
+    </repository>
+    <snapshotRepository>
+      <id>hop-plugins-local</id>
+      <name>Hop plugins local snapshots</name>
+      <url>${hop.plugins.local.snapshot.url}</url>
+    </snapshotRepository>
+  </distributionManagement>
 
   <repositories>
     <repository>

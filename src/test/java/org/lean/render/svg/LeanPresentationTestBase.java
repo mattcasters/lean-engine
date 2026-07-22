@@ -25,7 +25,9 @@ import org.lean.presentation.layout.LeanRenderPage;
 import org.lean.render.IRenderContext;
 import org.lean.render.context.PresentationRenderContext;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Disabled
 public class LeanPresentationTestBase {
@@ -129,8 +131,11 @@ public class LeanPresentationTestBase {
       }
     }
 
+    assertFalse(results.getRenderPages().isEmpty(), "Expected at least one render page");
     LeanRenderPage leanRenderPage = results.getRenderPages().get(0);
     String xml = leanRenderPage.getSvgXml();
-    assertNotNull(xml);
+    assertNotNull(xml, "SVG XML should be produced");
+    assertTrue(xml.contains("<svg") || xml.contains("<svg:"), "SVG should contain an svg root element");
+    assertTrue(xml.length() > 100, "SVG output looks too small to be a full page render");
   }
 }

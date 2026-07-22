@@ -101,6 +101,18 @@ Database type codes match Hop (`H2`, `MYSQL`, `POSTGRESQL`, …). The correspond
 | Standalone library | compile (default) | Apps / lean-rest pull hop-core transitively |
 | Inside Hop | provided profile (future) | Avoid duplicate hop-core on plugin classpath |
 
+## Publishing snapshots
+
+`distributionManagement` uses server id `hop-plugins-local` (credentials in `~/.m2/settings.xml`). Override repository URLs when deploying:
+
+```bash
+mvn clean deploy \
+  -Dhop.plugins.local.snapshot.url=https://YOUR-HOST/repository/maven-snapshots/ \
+  -Dhop.plugins.local.release.url=https://YOUR-HOST/repository/maven-releases/
+```
+
+Default placeholder URLs point at `localhost` so accidental deploy without configuration fails safely.
+
 ## Package overview
 
 | Package | Contents |
