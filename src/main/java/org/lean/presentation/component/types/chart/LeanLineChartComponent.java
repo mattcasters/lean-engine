@@ -39,7 +39,8 @@ import org.lean.render.IRenderContext;
 @LeanComponentPlugin(
     id = "LeanLineChartComponent",
     name = "Line chart",
-    description = "A line chart component")
+    description = "A line chart component",
+    image = "ui/images/components/line-chart.svg")
 @Getter
 @Setter
 public class LeanLineChartComponent extends LeanBaseChartComponent implements ILeanComponent {

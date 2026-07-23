@@ -26,7 +26,8 @@ import lombok.Setter;
 @LeanConnectorPlugin(
     id = "MetadataElementsConnector",
     name = "Metadata elements",
-    description = "Lists the available metadata elements")
+    description = "Lists the available metadata elements",
+    image = "ui/images/connectors/metadata.svg")
 @Getter
 @Setter
 public class LeanMetadataElementsConnector extends LeanBaseConnector implements ILeanConnector {

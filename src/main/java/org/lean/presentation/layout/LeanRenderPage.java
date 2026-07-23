@@ -186,13 +186,38 @@ public class LeanRenderPage {
   }
 
   public LeanGeometry lookupComponentGeometry(String componentName) {
+    DrawnItem item = lookupComponentDrawnItem(componentName);
+    return item != null ? item.getGeometry() : null;
+  }
+
+  /**
+   * The envelope {@link DrawnItemType#Component} for a named component, or {@code null}.
+   * Used for interaction outlines when the hit item is a smaller {@code ComponentItem}.
+   */
+  public DrawnItem lookupComponentDrawnItem(String componentName) {
+    if (componentName == null) {
+      return null;
+    }
     for (DrawnItem item : drawnItems) {
-      if (item.getType() == DrawnItemType.Component) {
-        if (item.getComponentName().equals(componentName)) {
-          return item.getGeometry();
-        }
+      if (item.getType() == DrawnItemType.Component
+          && componentName.equals(item.getComponentName())) {
+        return item;
       }
     }
     return null;
+  }
+
+  /**
+   * All drawn items under (x,y), top-most first (reverse draw order).
+   */
+  public List<DrawnItem> lookupDrawnItems(int x, int y) {
+    List<DrawnItem> hits = new ArrayList<>();
+    for (int i = drawnItems.size() - 1; i >= 0; i--) {
+      DrawnItem item = drawnItems.get(i);
+      if (item.getGeometry() != null && item.getGeometry().contains(x, y)) {
+        hits.add(item);
+      }
+    }
+    return hits;
   }
 }

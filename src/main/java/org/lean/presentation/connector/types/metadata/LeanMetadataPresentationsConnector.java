@@ -19,7 +19,8 @@ import org.lean.presentation.datacontext.IDataContext;
 @LeanConnectorPlugin(
     id = "MetadataPresentationsConnector",
     name = "Presentations list",
-    description = "Lists the available presentations")
+    description = "Lists the available presentations",
+    image = "ui/images/connectors/presentations.svg")
 public class LeanMetadataPresentationsConnector extends LeanBaseConnector
     implements ILeanConnector {
 

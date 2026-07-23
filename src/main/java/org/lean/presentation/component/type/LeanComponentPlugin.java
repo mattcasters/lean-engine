@@ -19,4 +19,11 @@ public @interface LeanComponentPlugin {
 
   /** @return The description of the component */
   String description() default "";
+
+  /**
+   * Classpath path to an SVG (or other image) resource in this plugin's JAR, e.g. {@code
+   * ui/images/components/label.svg}. Empty means clients should use a default icon. Exposed via
+   * {@code IPlugin#getImageFile()} and {@code GET plugins/components}.
+   */
+  String image() default "";
 }

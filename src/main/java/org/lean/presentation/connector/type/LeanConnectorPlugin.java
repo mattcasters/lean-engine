@@ -19,4 +19,11 @@ public @interface LeanConnectorPlugin {
 
   /** @return The description of the connector */
   String description();
+
+  /**
+   * Classpath path to an SVG (or other image) resource in this plugin's JAR, e.g. {@code
+   * ui/images/connectors/sql.svg}. Empty means clients should use a default icon. Exposed via {@code
+   * IPlugin#getImageFile()} and {@code GET plugins/connectors}.
+   */
+  String image() default "";
 }

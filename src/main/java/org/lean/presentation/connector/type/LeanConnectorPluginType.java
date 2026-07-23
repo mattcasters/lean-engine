@@ -47,4 +47,9 @@ public class LeanConnectorPluginType extends BasePluginType<LeanConnectorPlugin>
   protected String extractDesc(LeanConnectorPlugin annotation) {
     return annotation.description();
   }
+
+  @Override
+  protected String extractImageFile(LeanConnectorPlugin annotation) {
+    return annotation.image();
+  }
 }

@@ -34,7 +34,9 @@ import org.lean.presentation.component.type.LeanComponentPluginType;
 import org.lean.presentation.connector.type.ILeanConnector;
 import org.lean.presentation.connector.type.LeanConnectorPlugin;
 import org.lean.presentation.connector.type.LeanConnectorPluginType;
+import org.lean.presentation.component.types.group.GroupKeyMapping;
 import org.lean.presentation.connector.types.filter.SimpleFilterValue;
+import org.lean.presentation.connector.types.rest.LeanRestConnector;
 
 /**
  * Builds {@link GuiFormSchema} from {@link org.lean.core.gui.plugin.LeanWidgetElement} annotations
@@ -45,6 +47,13 @@ public class GuiFormSchemaBuilder {
 
   /** Max nesting depth for COMPONENT fields inside the component catalog (Group→Composite→…). */
   public static final int MAX_NESTED_COMPONENT_DEPTH = 3;
+
+  /**
+   * Max nesting depth for nested connector lists inside the connector catalog (Chain inside
+   * Chain). At this depth, {@code itemKind=connector} list fields are stripped from catalog
+   * entries so the catalog stays finite.
+   */
+  public static final int MAX_NESTED_CONNECTOR_DEPTH = 1;
 
   /**
    * Build a form schema for a component plugin id (e.g. {@code LeanLabelComponent}).
@@ -365,6 +374,12 @@ public class GuiFormSchemaBuilder {
     if (SimpleFilterValue.class.isAssignableFrom(itemClass)) {
       return "filter";
     }
+    if (GroupKeyMapping.class.isAssignableFrom(itemClass)) {
+      return "groupKey";
+    }
+    if (LeanRestConnector.JsonField.class.isAssignableFrom(itemClass)) {
+      return "jsonField";
+    }
     if (ILeanConnector.class.isAssignableFrom(itemClass)) {
       return "connector";
     }
@@ -568,30 +583,32 @@ public class GuiFormSchemaBuilder {
    * Build a form schema for a connector plugin id (e.g. {@code SqlConnector}).
    *
    * <p>No presentation wrapper/layout sections — connectors are edited as standalone metadata.
+   * When the schema contains a nested connector list, attaches {@link
+   * GuiFormSchema#getConnectorCatalog()}.
    */
   public GuiFormSchema buildConnectorSchema(String pluginId) throws LeanException {
+    GuiFormSchema schema = buildConnectorSchemaInternal(pluginId, 0);
+    if (schemaNeedsConnectorCatalog(schema)) {
+      schema.setConnectorCatalog(buildConnectorCatalog(0));
+    }
+    return schema;
+  }
+
+  /**
+   * Build connector plugin + base fields without attaching a catalog (used when building catalog
+   * entries).
+   *
+   * @param nestedDepth depth of nested connector lists already expanded (0 = top-level form)
+   */
+  private GuiFormSchema buildConnectorSchemaInternal(String pluginId, int nestedDepth)
+      throws LeanException {
     IPlugin plugin =
         PluginRegistry.getInstance().findPluginWithId(LeanConnectorPluginType.class, pluginId);
     if (plugin == null) {
       throw new LeanException("Connector plugin not found: " + pluginId);
     }
 
-    Class<? extends ILeanConnector> connectorClass;
-    try {
-      String className = plugin.getClassMap().get(ILeanConnector.class);
-      if (className == null) {
-        throw new LeanException("No main class mapping for connector plugin " + pluginId);
-      }
-      ClassLoader classLoader = PluginRegistry.getInstance().getClassLoader(plugin);
-      @SuppressWarnings("unchecked")
-      Class<? extends ILeanConnector> loaded =
-          (Class<? extends ILeanConnector>) classLoader.loadClass(className);
-      connectorClass = loaded;
-    } catch (LeanException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new LeanException("Unable to load class for connector plugin " + pluginId, e);
-    }
+    Class<? extends ILeanConnector> connectorClass = loadConnectorClass(plugin, pluginId);
 
     LeanConnectorPlugin annotation = connectorClass.getAnnotation(LeanConnectorPlugin.class);
     String name = annotation != null ? annotation.name() : plugin.getName();
@@ -617,6 +634,12 @@ public class GuiFormSchemaBuilder {
       pluginFields.addAll(entry.getValue());
     }
 
+    // At max depth, strip nested connector lists so the catalog stays finite
+    if (nestedDepth >= MAX_NESTED_CONNECTOR_DEPTH) {
+      pluginFields.removeIf(
+          f -> f.getType() == GuiFormFieldType.LIST && "connector".equals(f.getItemKind()));
+    }
+
     sortFields(pluginFields);
     if (!pluginFields.isEmpty()) {
       schema.setHasPluginWidgets(true);
@@ -626,6 +649,63 @@ public class GuiFormSchemaBuilder {
       schema.getSections().add(section);
     }
     return schema;
+  }
+
+  private Class<? extends ILeanConnector> loadConnectorClass(IPlugin plugin, String pluginId)
+      throws LeanException {
+    try {
+      String className = plugin.getClassMap().get(ILeanConnector.class);
+      if (className == null) {
+        throw new LeanException("No main class mapping for connector plugin " + pluginId);
+      }
+      ClassLoader classLoader = PluginRegistry.getInstance().getClassLoader(plugin);
+      @SuppressWarnings("unchecked")
+      Class<? extends ILeanConnector> loaded =
+          (Class<? extends ILeanConnector>) classLoader.loadClass(className);
+      return loaded;
+    } catch (LeanException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new LeanException("Unable to load class for connector plugin " + pluginId, e);
+    }
+  }
+
+  private boolean schemaNeedsConnectorCatalog(GuiFormSchema schema) {
+    for (GuiFormSection section : schema.getSections()) {
+      for (GuiFormField field : section.getFields()) {
+        if (field.getType() == GuiFormFieldType.LIST && "connector".equals(field.getItemKind())) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Build a catalog of all registered connector plugins for nested chain / connector-list editors.
+   *
+   * @param nestedDepth depth used when building each type's field list (0 = top of catalog)
+   */
+  public List<GuiFormComponentTypeInfo> buildConnectorCatalog(int nestedDepth)
+      throws LeanException {
+    List<GuiFormComponentTypeInfo> catalog = new ArrayList<>();
+    PluginRegistry registry = PluginRegistry.getInstance();
+    List<IPlugin> plugins = registry.getPlugins(LeanConnectorPluginType.class);
+    for (IPlugin plugin : plugins) {
+      String id = plugin.getIds()[0];
+      try {
+        GuiFormSchema typeSchema = buildConnectorSchemaInternal(id, nestedDepth + 1);
+        GuiFormComponentTypeInfo info =
+            new GuiFormComponentTypeInfo(
+                id, typeSchema.getPluginName(), typeSchema.getPluginDescription());
+        info.setSections(typeSchema.getSections());
+        catalog.add(info);
+      } catch (Exception e) {
+        // Skip plugins that cannot be schema-built
+      }
+    }
+    catalog.sort(Comparator.comparing(GuiFormComponentTypeInfo::getPluginId));
+    return catalog;
   }
 
   public boolean canBuildConnectorSchema(String pluginId) {

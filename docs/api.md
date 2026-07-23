@@ -67,10 +67,12 @@ LeanSampleDataConnector sample = new LeanSampleDataConnector(100);
 LeanConnector connector = new LeanConnector("rows", sample);
 presentation.getConnectors().add(connector);
 
-// Or collect rows:
+// Or collect rows (all rows — not for UI preview):
 PresentationDataContext ctx = new PresentationDataContext(presentation, provider);
 List<RowMetaAndData> rows = connector.retrieveRows(ctx);
 ```
+
+For **limited sample previews** (connector studio), see `docs/connectors.md` → *Connector studio preview*. Do not use unbounded `retrieveRows` for browser Apply/preview.
 
 ## Themes
 

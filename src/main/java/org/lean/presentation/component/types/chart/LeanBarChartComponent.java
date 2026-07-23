@@ -34,7 +34,8 @@ import org.lean.render.IRenderContext;
 @LeanComponentPlugin(
     id = "LeanBarChartComponent",
     name = "Bar Chart",
-    description = "A bar chart component")
+    description = "A bar chart component",
+    image = "ui/images/components/bar-chart.svg")
 @Getter
 @Setter
 public class LeanBarChartComponent extends LeanBaseChartComponent implements ILeanComponent {

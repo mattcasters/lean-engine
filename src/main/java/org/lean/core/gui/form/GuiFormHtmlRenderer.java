@@ -54,9 +54,12 @@ public class GuiFormHtmlRenderer {
   }
 
   /**
-   * Render a standalone connector metadata form (side panel): connector name, plugin fields, save
-   * via {@code saveConnector()}. Reuses the same field load/save helpers as components by aliasing
-   * {@code iComponent} to the nested connector plugin payload.
+   * Render a standalone connector metadata form (side panel): connector name, plugin fields.
+   *
+   * <p>Action bar: <strong>Apply</strong> refreshes sample preview ({@code
+   * applyConnectorPreview()}), <strong>Save</strong> persists metadata ({@code saveConnector()}).
+   * Field load/save reuses component helpers by aliasing {@code iComponent} to the nested connector
+   * plugin payload. lean-rest wraps this HTML in the connector studio shell (input/output panes).
    */
   public String renderConnector(GuiFormSchema schema) {
     StringBuilder html = new StringBuilder();
@@ -64,12 +67,7 @@ public class GuiFormHtmlRenderer {
         .append(esc(schema.getPluginId()))
         .append(" -->\n");
 
-    appendFormActionBar(
-        html,
-        "connector",
-        "saveConnector()",
-        "closeConnector()",
-        "editConnectorsList()");
+    appendConnectorFormActionBar(html, "connector");
 
     html.append("<label for=\"connectorName\">Connector name: </label>\n");
     html.append("<input type=\"text\" id=\"connectorName\" name=\"connectorName\">\n<br>\n");
@@ -81,12 +79,7 @@ public class GuiFormHtmlRenderer {
     }
 
     html.append("\n<br>\n");
-    appendFormActionBar(
-        html,
-        "connector-bottom",
-        "saveConnector()",
-        "closeConnector()",
-        "editConnectorsList()");
+    appendConnectorFormActionBar(html, "connector-bottom");
 
     renderInitScript(html, schema);
     renderConnectorLoadScript(html, schema);
@@ -129,6 +122,40 @@ public class GuiFormHtmlRenderer {
           .append(backOnclick)
           .append("\" title=\"Return to the connector list\">Back to list</button>\n");
     }
+    html.append("</div>\n\n");
+  }
+
+  /**
+   * Connector studio action bar: Apply = preview samples, Save = persist, Close, Back to list.
+   */
+  private void appendConnectorFormActionBar(StringBuilder html, String suffix) {
+    html.append("<div class=\"form-action-bar form-action-bar-connector\" id=\"formActionBar-")
+        .append(esc(suffix))
+        .append("\">\n");
+    html.append(
+        "  <button type=\"button\" class=\"form-action-apply\" id=\"editButtonApply-")
+        .append(esc(suffix))
+        .append(
+            "\" onclick=\"applyConnectorPreview()\" "
+                + "title=\"Refresh input/output sample rows from current form values "
+                + "(does not save)\">Apply</button>\n");
+    html.append(
+        "  <button type=\"button\" class=\"form-action-save\" id=\"editButtonSave-")
+        .append(esc(suffix))
+        .append(
+            "\" onclick=\"saveConnector()\" "
+                + "title=\"Save connector metadata and reload the presentation\">Save</button>\n");
+    html.append(
+        "  <button type=\"button\" class=\"form-action-close\" id=\"editButtonClose-")
+        .append(esc(suffix))
+        .append("\" onclick=\"closeConnector()\" title=\"Close the editor without saving\">"
+            + "Close</button>\n");
+    html.append(
+        "  <button type=\"button\" class=\"form-action-back\" id=\"editButtonBack-")
+        .append(esc(suffix))
+        .append(
+            "\" onclick=\"editConnectorsList()\" title=\"Return to the connector list\">"
+                + "Back to list</button>\n");
     html.append("</div>\n\n");
   }
 
@@ -225,6 +252,8 @@ public class GuiFormHtmlRenderer {
         case LIST -> {
           if ("component".equals(field.getItemKind())) {
             renderComponentListField(html, field);
+          } else if ("connector".equals(field.getItemKind())) {
+            renderConnectorListField(html, field);
           } else {
             renderListField(html, field);
           }
@@ -383,6 +412,36 @@ public class GuiFormHtmlRenderer {
     html.append("</fieldset>\n");
   }
 
+  /**
+   * Ordered chain of nested connectors (e.g. {@code ChainConnector.connectors}). Client fills
+   * steps from {@code window.connectorCatalog}.
+   */
+  private void renderConnectorListField(StringBuilder html, GuiFormField field) {
+    String id = esc(field.getId());
+    html.append(
+        "<fieldset class=\"nested-connector-list-fieldset\" "
+            + "style=\"border: 1px solid #777; margin: 8px 0; padding: 8px;\">\n");
+    html.append("<legend>").append(esc(field.getLabel())).append("</legend>\n");
+    if (StringUtils.isNotEmpty(field.getToolTip())) {
+      html.append("<p class=\"editor-hint\">")
+          .append(esc(field.getToolTip()))
+          .append("</p>\n");
+    }
+    html.append("<div id=\"")
+        .append(id)
+        .append("_items\" class=\"nested-connector-list\" data-prefix=\"")
+        .append(id)
+        .append("\" data-field=\"")
+        .append(esc(field.getFieldName()))
+        .append("\"></div>\n");
+    html.append("<button type=\"button\" class=\"nested-connector-add-btn\" id=\"")
+        .append(id)
+        .append("_add\" onclick=\"nestedConnectorListAdd('")
+        .append(id)
+        .append("')\">Add step</button>\n");
+    html.append("</fieldset>\n");
+  }
+
   private void renderListField(StringBuilder html, GuiFormField field) {
     String id = esc(field.getId());
     String kind = StringUtils.defaultIfEmpty(field.getItemKind(), "column");
@@ -434,6 +493,22 @@ public class GuiFormHtmlRenderer {
       html.append("<th>Type</th><th>Ascending</th><th></th><th></th><th></th>\n");
     } else if ("filter".equals(kind)) {
       html.append("<th>Field name</th><th>Filter value</th><th></th><th></th><th></th>\n");
+    } else if ("groupKey".equals(kind)) {
+      html.append(
+          "<th>Group column</th><th>Connector column</th><th></th><th></th><th></th>\n");
+    } else if ("jsonField".equals(kind)) {
+      html.append(
+          """
+          <th>JSON tag</th>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Format</th>
+          <th>Length</th>
+          <th>Precision</th>
+          <th></th>
+          <th></th>
+          <th></th>
+          """);
     } else if ("connector".equals(kind) || "bean".equals(kind)) {
       html.append("<th>Plugin JSON (advanced)</th><th></th><th></th><th></th>\n");
     } else {
@@ -526,6 +601,19 @@ public class GuiFormHtmlRenderer {
       html.append("window.componentCatalog = window.componentCatalog || [];\n");
     }
 
+    if (schema.getConnectorCatalog() != null && !schema.getConnectorCatalog().isEmpty()) {
+      try {
+        String catalogJson = MAPPER.writeValueAsString(schema.getConnectorCatalog());
+        html.append("window.connectorCatalog = ")
+            .append(catalogJson)
+            .append(";\n");
+      } catch (Exception e) {
+        html.append("window.connectorCatalog = [];\n");
+      }
+    } else {
+      html.append("window.connectorCatalog = window.connectorCatalog || [];\n");
+    }
+
     // Ensure presentation metadata caches are warm before binding selects
     html.append(
         "if (typeof ensureFormMetadataCaches === 'function') { ensureFormMetadataCaches(); }\n");
@@ -553,8 +641,10 @@ public class GuiFormHtmlRenderer {
           }
         }
         if (field.getType() == GuiFormFieldType.LIST
-            && ("column".equals(field.getItemKind()) || "fact".equals(field.getItemKind()))) {
-          // Column/fact tables use connector columns; refresh when source connector changes
+            && ("column".equals(field.getItemKind())
+                || "fact".equals(field.getItemKind())
+                || "filter".equals(field.getItemKind()))) {
+          // Column/fact/filter tables use connector columns; refresh when source changes
           html.append("registerConnectorColumnListTable('")
               .append(esc(field.getId()))
               .append("', '")
@@ -570,6 +660,11 @@ public class GuiFormHtmlRenderer {
         }
         if (field.getType() == GuiFormFieldType.LIST && "component".equals(field.getItemKind())) {
           html.append("initNestedComponentList('")
+              .append(esc(field.getId()))
+              .append("');\n");
+        }
+        if (field.getType() == GuiFormFieldType.LIST && "connector".equals(field.getItemKind())) {
+          html.append("initNestedConnectorList('")
               .append(esc(field.getId()))
               .append("');\n");
         }
@@ -646,7 +741,8 @@ public class GuiFormHtmlRenderer {
     for (GuiFormSection section : schema.getSections()) {
       for (GuiFormField field : section.getFields()) {
         if (field.getType() == GuiFormFieldType.LIST
-            && !"component".equals(field.getItemKind())) {
+            && !"component".equals(field.getItemKind())
+            && !"connector".equals(field.getItemKind())) {
           return true;
         }
       }
@@ -717,8 +813,26 @@ public class GuiFormHtmlRenderer {
               .append(jsonId)
               .append("\", \"")
               .append(id)
+              .append("\", sourceConnectorColumnNames);\n");
+        } else if ("groupKey".equals(kind)) {
+          html.append("setGroupKeyMappings(iComponent, \"")
+              .append(jsonId)
+              .append("\", \"")
+              .append(id)
               .append("\");\n");
-        } else if ("connector".equals(kind) || "bean".equals(kind)) {
+        } else if ("jsonField".equals(kind)) {
+          html.append("setJsonFields(iComponent, \"")
+              .append(jsonId)
+              .append("\", \"")
+              .append(id)
+              .append("\");\n");
+        } else if ("connector".equals(kind)) {
+          html.append("setNestedConnectorList(iComponent, \"")
+              .append(jsonId)
+              .append("\", \"")
+              .append(id)
+              .append("\");\n");
+        } else if ("bean".equals(kind)) {
           html.append("setJsonObjectList(iComponent, \"")
               .append(jsonId)
               .append("\", \"")
@@ -865,7 +979,25 @@ public class GuiFormHtmlRenderer {
               .append("\", \"")
               .append(id)
               .append("\");\n");
-        } else if ("connector".equals(kind) || "bean".equals(kind)) {
+        } else if ("groupKey".equals(kind)) {
+          html.append("getGroupKeyMappings(iComponent, \"")
+              .append(jsonId)
+              .append("\", \"")
+              .append(id)
+              .append("\");\n");
+        } else if ("jsonField".equals(kind)) {
+          html.append("getJsonFields(iComponent, \"")
+              .append(jsonId)
+              .append("\", \"")
+              .append(id)
+              .append("\");\n");
+        } else if ("connector".equals(kind)) {
+          html.append("getNestedConnectorList(iComponent, \"")
+              .append(jsonId)
+              .append("\", \"")
+              .append(id)
+              .append("\");\n");
+        } else if ("bean".equals(kind)) {
           html.append("getJsonObjectList(iComponent, \"")
               .append(jsonId)
               .append("\", \"")

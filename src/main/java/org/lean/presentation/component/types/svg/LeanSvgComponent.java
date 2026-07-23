@@ -32,7 +32,11 @@ import org.lean.render.IRenderContext;
 import org.w3c.dom.Node;
 
 @JsonDeserialize(as = LeanSvgComponent.class)
-@LeanComponentPlugin(id = "LeanSvgComponent", name = "SVG", description = "An SVG component")
+@LeanComponentPlugin(
+    id = "LeanSvgComponent",
+    name = "SVG",
+    description = "An SVG component",
+    image = "ui/images/components/svg.svg")
 @Getter
 @Setter
 public class LeanSvgComponent extends LeanBaseComponent implements ILeanComponent {

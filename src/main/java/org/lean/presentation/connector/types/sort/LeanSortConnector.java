@@ -28,7 +28,11 @@ import lombok.Setter;
 
 /** Sort rows from a source connector using a selection of columns */
 @JsonDeserialize(as = LeanSortConnector.class)
-@LeanConnectorPlugin(id = "SortConnector", name = "Sort rows", description = "Sorts all rows")
+@LeanConnectorPlugin(
+    id = "SortConnector",
+    name = "Sort rows",
+    description = "Sorts all rows",
+    image = "ui/images/connectors/sort.svg")
 @Getter
 @Setter
 public class LeanSortConnector extends LeanBaseConnector implements ILeanConnector {
@@ -39,7 +43,8 @@ public class LeanSortConnector extends LeanBaseConnector implements ILeanConnect
       order = "10000-columns",
       parentId = LeanGuiFormConstants.PARENT_PLUGIN,
       type = LeanWidgetType.TEXT,
-      label = "Sort columns")
+      label = "Sort columns",
+      toolTip = "Columns used as sort keys (list editor; annotation type ignored for List fields)")
   @HopMetadataProperty
   private List<LeanColumn> columns;
 
@@ -48,7 +53,7 @@ public class LeanSortConnector extends LeanBaseConnector implements ILeanConnect
       parentId = LeanGuiFormConstants.PARENT_PLUGIN,
       type = LeanWidgetType.TEXT,
       label = "Sort methods",
-      toolTip = "One method per sort column (same list size)")
+      toolTip = "One method per sort column (same list size; List fields always render as LIST)")
   @HopMetadataProperty
   private List<LeanSortMethod> sortMethods;
 

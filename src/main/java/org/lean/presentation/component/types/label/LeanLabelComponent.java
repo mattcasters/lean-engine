@@ -37,7 +37,8 @@ import org.lean.render.IRenderContext;
 @LeanComponentPlugin(
     id = "LeanLabelComponent",
     name = "Label",
-    description = "A Label to decorate your presentations")
+    description = "A Label to decorate your presentations",
+    image = "ui/images/components/label.svg")
 @Getter
 @Setter
 public class LeanLabelComponent extends LeanBaseComponent implements ILeanComponent {

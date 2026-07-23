@@ -39,7 +39,8 @@ import org.lean.presentation.datacontext.IDataContext;
 @LeanConnectorPlugin(
     id = "SimpleFilterConnector",
     name = "Simple filter",
-    description = "Keep rows matching exact field values (AND across fields, OR within a field)")
+    description = "Keep rows matching exact field values (AND across fields, OR within a field)",
+    image = "ui/images/connectors/filter.svg")
 @Getter
 @Setter
 public class LeanSimpleFilterConnector extends LeanBaseConnector implements ILeanConnector {

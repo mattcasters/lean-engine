@@ -49,7 +49,8 @@ import org.lean.render.IRenderContext;
 @LeanComponentPlugin(
     id = "LeanCrosstabComponent",
     name = "Crosstab",
-    description = "A crosstab component")
+    description = "A crosstab component",
+    image = "ui/images/components/crosstab.svg")
 @Getter
 @Setter
 public class LeanCrosstabComponent extends LeanBaseAggregatingComponent implements ILeanComponent {

@@ -30,7 +30,11 @@ import org.lean.presentation.page.LeanPage;
 import org.lean.render.IRenderContext;
 
 @JsonDeserialize(as = LeanImageComponent.class)
-@LeanComponentPlugin(id = "LeanImageComponent", name = "Image", description = "An image component")
+@LeanComponentPlugin(
+    id = "LeanImageComponent",
+    name = "Image",
+    description = "An image component",
+    image = "ui/images/components/image.svg")
 @Getter
 @Setter
 public class LeanImageComponent extends LeanBaseComponent implements ILeanComponent {

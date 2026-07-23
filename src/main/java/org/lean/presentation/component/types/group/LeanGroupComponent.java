@@ -66,7 +66,8 @@ import lombok.Setter;
 @LeanComponentPlugin(
     id = "LeanGroupComponent",
     name = "Group",
-    description = "A way to render another component multiple times creating groups of data")
+    description = "A way to render another component multiple times creating groups of data",
+    image = "ui/images/components/group.svg")
 @Getter
 @Setter
 public class LeanGroupComponent extends LeanBaseComponent implements ILeanComponent {
@@ -91,6 +92,21 @@ public class LeanGroupComponent extends LeanBaseComponent implements ILeanCompon
   @HopMetadataProperty
   private boolean distinctSelection;
 
+  /**
+   * Optional explicit join keys for filtering nested connectors. Empty → match group and connector
+   * columns by equal name (legacy). Non-empty → only these mappings are applied.
+   */
+  @LeanWidgetElement(
+      order = "10250-keyMappings",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Nested key mappings",
+      toolTip =
+          "Optional: map group columns to nested connector columns for filtering. "
+              + "Leave empty to match columns by the same name.")
+  @HopMetadataProperty
+  private List<GroupKeyMapping> keyMappings;
+
   @LeanWidgetElement(
       order = "10300-groupComponent",
       parentId = LeanGuiFormConstants.PARENT_PLUGIN,
@@ -113,6 +129,7 @@ public class LeanGroupComponent extends LeanBaseComponent implements ILeanCompon
 
     columnSelection = new ArrayList<>();
     columnSorts = new ArrayList<>();
+    keyMappings = new ArrayList<>();
   }
 
   public LeanGroupComponent(
@@ -143,6 +160,12 @@ public class LeanGroupComponent extends LeanBaseComponent implements ILeanCompon
       this.columnSorts.add(new LeanSortMethod(m));
     }
     this.distinctSelection = c.distinctSelection;
+    this.keyMappings = new ArrayList<>();
+    if (c.keyMappings != null) {
+      for (GroupKeyMapping m : c.keyMappings) {
+        this.keyMappings.add(new GroupKeyMapping(m));
+      }
+    }
     this.groupComponent = c.groupComponent == null ? null : new LeanComponent(c.groupComponent);
     this.verticalMargin = c.verticalMargin;
     this.themeName = c.themeName;
@@ -270,8 +293,10 @@ public class LeanGroupComponent extends LeanBaseComponent implements ILeanCompon
       }
 
       // Create a new data context which will filter the data sources...
+      // (optional keyMappings: group column → nested connector column)
       //
-      IDataContext groupRowDataContext = new GroupDataContext(dataContext, groupRow);
+      IDataContext groupRowDataContext =
+          new GroupDataContext(dataContext, groupRow, keyMappings);
 
       // Call the processSourceData listeners...
       //

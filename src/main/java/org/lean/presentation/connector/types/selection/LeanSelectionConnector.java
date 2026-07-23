@@ -31,7 +31,8 @@ import lombok.Setter;
 @LeanConnectorPlugin(
     id = "SelectionConnector",
     name = "Select fields",
-    description = "Makes a selection of fields from a source connector")
+    description = "Makes a selection of fields from a source connector",
+    image = "ui/images/connectors/select.svg")
 @Getter
 @Setter
 public class LeanSelectionConnector extends LeanBaseConnector implements ILeanConnector {

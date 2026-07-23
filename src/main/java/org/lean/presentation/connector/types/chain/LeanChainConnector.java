@@ -26,7 +26,8 @@ import lombok.Setter;
 @LeanConnectorPlugin(
     id = "ChainConnector",
     name = "Chain connectors",
-    description = "Chain multiple connectors, encapsulate in a single connector")
+    description = "Chain multiple connectors, encapsulate in a single connector",
+    image = "ui/images/connectors/chain.svg")
 @Getter
 @Setter
 public class LeanChainConnector extends LeanBaseConnector implements ILeanConnector {
@@ -35,15 +36,18 @@ public class LeanChainConnector extends LeanBaseConnector implements ILeanConnec
   @JsonIgnore protected ArrayBlockingQueue<Object> finishedQueue;
 
   /**
-   * Nested connector graph. Exposed as a form list with itemKind {@code connector}; full nested
-   * connector editing is limited in the web UI (plugin id + JSON payload).
+   * Nested connector pipeline. Schema type is always {@code LIST} with {@code itemKind=connector}
+   * (see {@code GuiFormSchemaBuilder}); the annotation {@code type} is ignored for {@link List}
+   * fields. Web UI currently uses advanced JSON rows; a step editor + connector catalog is planned.
    */
   @LeanWidgetElement(
       order = "10000-connectors",
       parentId = LeanGuiFormConstants.PARENT_PLUGIN,
       type = LeanWidgetType.TEXT,
       label = "Chained connectors",
-      toolTip = "Ordered list of nested connector plugins (edit carefully)")
+      toolTip =
+          "Ordered nested connector steps (Filter, Select, Sort, …). "
+              + "First step uses the chain Source connector; later steps wire automatically.")
   @HopMetadataProperty
   private List<ILeanConnector> connectors;
 
@@ -73,17 +77,28 @@ public class LeanChainConnector extends LeanBaseConnector implements ILeanConnec
 
   @Override
   public IRowMeta describeOutput(IDataContext dataContext) throws LeanException {
-    LeanConnector connector = dataContext.getConnector(getSourceConnectorName());
-    if (connector == null) {
-      throw new LeanException(
-          "Unable to find connector source '"
-              + getSourceConnectorName()
-              + "' for chain connector");
+    // Nested steps resolve each other via synthetic names (__ChainConnector_N /
+    // _RESULT_OF_CHAIN_). describe must use the chain context, not the parent — otherwise
+    // intermediate sources are missing and transforms fail describe while streaming still works.
+    if (connectors == null || connectors.isEmpty()) {
+      throw new LeanException("Chain connector has no nested steps to describe");
+    }
+
+    String outerSource = getSourceConnectorName();
+    if (outerSource != null && !outerSource.isBlank()) {
+      LeanConnector source = dataContext.getConnector(outerSource);
+      if (source == null) {
+        throw new LeanException(
+            "Unable to find connector source '" + outerSource + "' for chain connector");
+      }
     }
 
     ChainDataContext chainDataContext = createChainContext(dataContext);
     LeanConnector lastConnector = chainDataContext.getLastConnector();
-    return lastConnector.getConnector().describeOutput(dataContext);
+    if (lastConnector == null || lastConnector.getConnector() == null) {
+      throw new LeanException("Chain connector failed to resolve the last nested step");
+    }
+    return lastConnector.getConnector().describeOutput(chainDataContext);
   }
 
   public ChainDataContext createChainContext(IDataContext parentDataContext) {

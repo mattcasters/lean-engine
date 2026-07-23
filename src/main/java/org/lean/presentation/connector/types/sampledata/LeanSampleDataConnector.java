@@ -26,7 +26,8 @@ import lombok.Setter;
 @LeanConnectorPlugin(
     id = "SampleDataConnector",
     name = "Sample data",
-    description = "A sample data connector giving back a configurable list of sample rows")
+    description = "A sample data connector giving back a configurable list of sample rows",
+    image = "ui/images/connectors/sample-data.svg")
 @Getter
 @Setter
 public class LeanSampleDataConnector extends LeanBaseConnector implements ILeanConnector {

@@ -1,5 +1,6 @@
 package org.lean.core.gui.form;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -89,14 +90,70 @@ class PluginFormCoverageTest {
   }
 
   @Test
+  void restConnectorHasJsonFieldList() throws Exception {
+    GuiFormSchema schema = new GuiFormSchemaBuilder().buildConnectorSchema("LeanRestConnector");
+    GuiFormField fields = findField(schema, "fields");
+    assertNotNull(fields, "REST fields list should be annotated and present");
+    assertTrue(fields.getType() == GuiFormFieldType.LIST);
+    assertEquals("jsonField", fields.getItemKind());
+
+    String html = new GuiFormHtmlRenderer().renderConnector(schema);
+    assertTrue(html.contains("setJsonFields"), "REST form should load jsonField list");
+    assertTrue(html.contains("getJsonFields"), "REST form should save jsonField list");
+    assertTrue(html.contains("JSON tag") || html.contains("jsonField"));
+  }
+
+  @Test
+  void chainConnectorHasConnectorListAndCatalog() throws Exception {
+    GuiFormSchema schema = new GuiFormSchemaBuilder().buildConnectorSchema("ChainConnector");
+    GuiFormField connectors = findField(schema, "connectors");
+    assertNotNull(connectors);
+    assertTrue(connectors.getType() == GuiFormFieldType.LIST);
+    assertEquals("connector", connectors.getItemKind());
+
+    assertNotNull(schema.getConnectorCatalog());
+    assertFalse(
+        schema.getConnectorCatalog().isEmpty(),
+        "Chain schema should attach a connector catalog for nested step editors");
+    // Catalog should include common transform types
+    boolean hasSort =
+        schema.getConnectorCatalog().stream()
+            .anyMatch(c -> "SortConnector".equals(c.getPluginId()));
+    assertTrue(hasSort, "connector catalog should include SortConnector");
+
+    String html = new GuiFormHtmlRenderer().renderConnector(schema);
+    assertTrue(html.contains("window.connectorCatalog"));
+    assertTrue(html.contains("setNestedConnectorList"), "chain steps use nested connector list");
+    assertTrue(html.contains("getNestedConnectorList"));
+    assertTrue(html.contains("nestedConnectorListAdd"));
+    assertTrue(html.contains("nested-connector-list"));
+    assertFalse(html.contains("setJsonObjectList(iComponent, \"connectors\""),
+        "chain connectors should not use raw JSON textareas");
+  }
+
+  @Test
+  void groupComponentHasKeyMappingsList() throws Exception {
+    GuiFormSchema schema = new GuiFormSchemaBuilder().buildComponentSchema("LeanGroupComponent");
+    GuiFormField keys = findField(schema, "keyMappings");
+    assertNotNull(keys, "Group should expose nested keyMappings");
+    assertEquals(GuiFormFieldType.LIST, keys.getType());
+    assertEquals("groupKey", keys.getItemKind());
+
+    String html = new GuiFormHtmlRenderer().render(schema);
+    assertTrue(html.contains("setGroupKeyMappings") || html.contains("groupKey"));
+  }
+
+  @Test
   void connectorFormsRenderHtmlWithSaveScript() throws Exception {
     GuiFormSchema schema = new GuiFormSchemaBuilder().buildConnectorSchema("SqlConnector");
     String html = new GuiFormHtmlRenderer().renderConnector(schema);
     assertTrue(html.contains("connectorName"));
     assertTrue(html.contains("connectorSaveScript"));
     assertTrue(html.contains("saveConnector()"));
+    assertTrue(html.contains("applyConnectorPreview()"));
     assertTrue(html.contains("form-action-bar"));
     assertTrue(html.contains("Apply"));
+    assertTrue(html.contains("Save"));
     assertTrue(html.contains("closeConnector()"));
     assertTrue(html.contains("databaseConnectionName") || html.contains("sql"));
   }

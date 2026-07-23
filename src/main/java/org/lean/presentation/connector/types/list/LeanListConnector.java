@@ -25,7 +25,8 @@ import lombok.Setter;
 @LeanConnectorPlugin(
     id = "LeanListConnector",
     name = "List",
-    description = "A simple connector for embedded usage")
+    description = "A simple connector for embedded usage",
+    image = "ui/images/connectors/list.svg")
 @Getter
 @Setter
 public class LeanListConnector extends LeanBaseConnector implements ILeanConnector {

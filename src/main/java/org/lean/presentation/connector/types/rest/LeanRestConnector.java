@@ -46,7 +46,8 @@ import lombok.Setter;
 @LeanConnectorPlugin(
     id = "LeanRestConnector",
     name = "REST",
-    description = "This connector retrieves and parses JSON data from a REST service")
+    description = "This connector retrieves and parses JSON data from a REST service",
+    image = "ui/images/connectors/rest.svg")
 @Getter
 @Setter
 public class LeanRestConnector extends LeanBaseConnector implements ILeanConnector {
@@ -86,6 +87,16 @@ public class LeanRestConnector extends LeanBaseConnector implements ILeanConnect
   @HopMetadataProperty
   private String rowsElement;
 
+  /**
+   * Maps JSON object properties to Hop value metas. Edited as a typed list ({@code itemKind=jsonField})
+   * in the browser form.
+   */
+  @LeanWidgetElement(
+      order = "10400-fields",
+      parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+      type = LeanWidgetType.TEXT,
+      label = "Output fields",
+      toolTip = "JSON tags mapped to row columns (tag, name, Hop type, format)")
   @HopMetadataProperty(key = "fields")
   private List<JsonField> fields;
 
@@ -251,14 +262,84 @@ public class LeanRestConnector extends LeanBaseConnector implements ILeanConnect
   @Getter
   @Setter
   public static final class JsonField {
-    @HopMetadataProperty private String tag;
-    @HopMetadataProperty private String name;
-    @HopMetadataProperty private String type;
-    @HopMetadataProperty private String formatMask;
-    @HopMetadataProperty private String length;
-    @HopMetadataProperty private String precision;
-    @HopMetadataProperty private String decimal;
-    @HopMetadataProperty private String grouping;
+
+    /** Hop type names offered in the form editor (must match {@link ValueMetaFactory}). */
+    public static final String[] FORM_TYPE_NAMES = {
+      "String",
+      "Integer",
+      "Number",
+      "BigNumber",
+      "Boolean",
+      "Date",
+      "Timestamp",
+      "Binary",
+      "Internet Address"
+    };
+
+    @LeanWidgetElement(
+        order = "100-tag",
+        parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+        type = LeanWidgetType.TEXT,
+        label = "JSON tag")
+    @HopMetadataProperty
+    private String tag;
+
+    @LeanWidgetElement(
+        order = "200-name",
+        parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+        type = LeanWidgetType.TEXT,
+        label = "Field name")
+    @HopMetadataProperty
+    private String name;
+
+    @LeanWidgetElement(
+        order = "300-type",
+        parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+        type = LeanWidgetType.COMBO,
+        label = "Type",
+        comboValuesMethod = "getFormTypeNames")
+    @HopMetadataProperty
+    private String type;
+
+    @LeanWidgetElement(
+        order = "400-formatMask",
+        parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+        type = LeanWidgetType.TEXT,
+        label = "Format mask")
+    @HopMetadataProperty
+    private String formatMask;
+
+    @LeanWidgetElement(
+        order = "500-length",
+        parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+        type = LeanWidgetType.TEXT,
+        label = "Length")
+    @HopMetadataProperty
+    private String length;
+
+    @LeanWidgetElement(
+        order = "600-precision",
+        parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+        type = LeanWidgetType.TEXT,
+        label = "Precision")
+    @HopMetadataProperty
+    private String precision;
+
+    @LeanWidgetElement(
+        order = "700-decimal",
+        parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+        type = LeanWidgetType.TEXT,
+        label = "Decimal symbol")
+    @HopMetadataProperty
+    private String decimal;
+
+    @LeanWidgetElement(
+        order = "800-grouping",
+        parentId = LeanGuiFormConstants.PARENT_PLUGIN,
+        type = LeanWidgetType.TEXT,
+        label = "Grouping symbol")
+    @HopMetadataProperty
+    private String grouping;
 
     public JsonField() {}
 
@@ -280,6 +361,11 @@ public class LeanRestConnector extends LeanBaseConnector implements ILeanConnect
       this.type = type;
     }
 
+    /** Combo options for the type field (invoked via {@code comboValuesMethod}). */
+    public String[] getFormTypeNames() {
+      return FORM_TYPE_NAMES;
+    }
+
     public IValueMeta createValueMeta() throws HopPluginException {
       int hopType = ValueMetaFactory.getIdForValueMeta(type);
       IValueMeta valueMeta = ValueMetaFactory.createValueMeta(Const.NVL(name, tag), hopType);
@@ -290,7 +376,5 @@ public class LeanRestConnector extends LeanBaseConnector implements ILeanConnect
       valueMeta.setGroupingSymbol(grouping);
       return valueMeta;
     }
-
-
   }
 }

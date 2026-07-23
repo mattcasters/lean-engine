@@ -53,4 +53,9 @@ public class LeanComponentPluginType extends BasePluginType<LeanComponentPlugin>
   protected String extractDesc(LeanComponentPlugin annotation) {
     return annotation.description();
   }
+
+  @Override
+  protected String extractImageFile(LeanComponentPlugin annotation) {
+    return annotation.image();
+  }
 }

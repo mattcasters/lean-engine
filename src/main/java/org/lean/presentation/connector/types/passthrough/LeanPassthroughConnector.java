@@ -16,7 +16,8 @@ import org.lean.presentation.datacontext.IDataContext;
 @LeanConnectorPlugin(
     id = "PassthroughConnector",
     name = "A passthrough connector",
-    description = "Simply passes all the rows of the selected data source")
+    description = "Simply passes all the rows of the selected data source",
+    image = "ui/images/connectors/passthrough.svg")
 public class LeanPassthroughConnector extends LeanBaseConnector implements ILeanConnector {
 
   @JsonIgnore protected ArrayBlockingQueue<Object> finishedQueue;

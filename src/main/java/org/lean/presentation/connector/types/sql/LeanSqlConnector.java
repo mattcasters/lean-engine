@@ -26,7 +26,8 @@ import org.lean.presentation.datacontext.IDataContext;
 @LeanConnectorPlugin(
     id = "SqlConnector",
     name = "Execute a SQL query",
-    description = "Reads data from a relational database using a SQL query")
+    description = "Reads data from a relational database using a SQL query",
+    image = "ui/images/connectors/sql.svg")
 @Getter
 @Setter
 public class LeanSqlConnector extends LeanBaseConnector implements ILeanConnector {

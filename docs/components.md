@@ -25,7 +25,27 @@ Inherited via `LeanBaseComponent` / `LeanComponent` wrapper:
 | `LeanImageComponent` | Image | Raster image from path/URL (server-side load) |
 | `LeanSvgComponent` | SVG | Embed/scale SVG artwork |
 | `LeanCompositeComponent` | Composite | Nested child components |
-| `LeanGroupComponent` | Group | Repeat a child layout per group key |
+| `LeanGroupComponent` | Group | Repeat a child layout per group key; nested connectors can be filtered by group keys (same-name match or explicit `keyMappings`) |
+
+## Plugin icons (`@LeanComponentPlugin.image`)
+
+Component type icons ship **with the plugin JAR** (lean-engine for built-ins).
+
+```java
+@LeanComponentPlugin(
+    id = "LeanLabelComponent",
+    name = "Label",
+    description = "...",
+    image = "ui/images/components/label.svg")
+```
+
+| Piece | Detail |
+|--------|--------|
+| Resources | `ui/images/components/*.svg` under lean-engine |
+| Registration | `LeanComponentPluginType.extractImageFile` → `IPlugin.getImageFile()` |
+| List API | `GET plugins/components` includes `"image"` |
+| Image API | `GET plugins/components/{pluginId}/image` |
+| Browser | Palette + page component list use the image API with name/description tooltips |
 
 ## Data-driven components
 

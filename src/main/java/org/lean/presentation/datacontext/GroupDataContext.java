@@ -1,5 +1,12 @@
 package org.lean.presentation.datacontext;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hop.core.RowMetaAndData;
 import org.apache.hop.core.exception.HopException;
 import org.apache.hop.core.row.IRowMeta;
@@ -8,30 +15,48 @@ import org.apache.hop.core.variables.IVariables;
 import org.apache.hop.core.variables.Variables;
 import org.apache.hop.metadata.api.IHopMetadataProvider;
 import org.lean.core.exception.LeanException;
+import org.lean.presentation.component.types.group.GroupKeyMapping;
 import org.lean.presentation.connector.LeanConnector;
 import org.lean.presentation.connector.types.chain.LeanChainConnector;
 import org.lean.presentation.connector.types.filter.LeanSimpleFilterConnector;
 import org.lean.presentation.connector.types.filter.SimpleFilterValue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import lombok.Getter;
-import lombok.Setter;
-
-/** A data context for a group. This means we're automatically setting variables to use in labels */
+/**
+ * Data context for one group-key row. Sets variables from group fields and, when nested components
+ * request a connector, optionally wraps it with equality filters so detail rows match the group.
+ *
+ * <p>Filtering rules:
+ *
+ * <ul>
+ *   <li>If {@link #keyMappings} is non-empty: for each mapping, filter {@code connectorColumn =
+ *       groupRow[groupColumn]} when both columns exist.
+ *   <li>Otherwise (legacy): for each group column whose name also appears on the connector output,
+ *       filter that name to the group value.
+ * </ul>
+ */
 @Getter
 @Setter
 public class GroupDataContext implements IDataContext {
 
   private final IDataContext parentDataContext;
   private final RowMetaAndData groupRow;
+  private final List<GroupKeyMapping> keyMappings;
   private IVariables variableSpace;
 
   public GroupDataContext(IDataContext parentDataContext, RowMetaAndData groupRow)
       throws LeanException {
+    this(parentDataContext, groupRow, null);
+  }
+
+  public GroupDataContext(
+      IDataContext parentDataContext,
+      RowMetaAndData groupRow,
+      List<GroupKeyMapping> keyMappings)
+      throws LeanException {
     this.parentDataContext = parentDataContext;
     this.groupRow = groupRow;
+    this.keyMappings =
+        keyMappings == null ? Collections.emptyList() : Collections.unmodifiableList(keyMappings);
 
     variableSpace = new Variables();
     variableSpace.initializeFrom(parentDataContext.getVariables());
@@ -73,25 +98,8 @@ public class GroupDataContext implements IDataContext {
     //
     IRowMeta parentConnectorRowMeta = parentConnector.describeOutput(parentDataContext);
 
-    // See if there are any filtered values to apply to the input using the given group row
-    //
-    List<SimpleFilterValue> filterValues = new ArrayList<>();
-    for (IValueMeta groupValueMeta : groupRow.getRowMeta().getValueMetaList()) {
-      IValueMeta parentConnectorValueMeta =
-          parentConnectorRowMeta.searchValueMeta(groupValueMeta.getName());
-      if (parentConnectorValueMeta != null) {
-        // Apply this as a simple filter value...
-        //
-        String fieldName = groupValueMeta.getName();
-        try {
-          String filterValue = groupRow.getString(fieldName, null);
-          filterValues.add(new SimpleFilterValue(groupValueMeta.getName(), filterValue));
-        } catch (HopException e) {
-          throw new LeanException(
-              "Error converting group row field name '" + fieldName + "' to String", e);
-        }
-      }
-    }
+    List<SimpleFilterValue> filterValues =
+        buildFilterValues(parentConnectorRowMeta);
 
     if (!filterValues.isEmpty()) {
 
@@ -116,6 +124,63 @@ public class GroupDataContext implements IDataContext {
   }
 
   /**
+   * Build equality filters for the nested connector from the current group row.
+   *
+   * @param parentConnectorRowMeta output layout of the requested connector
+   */
+  List<SimpleFilterValue> buildFilterValues(IRowMeta parentConnectorRowMeta) throws LeanException {
+    List<SimpleFilterValue> filterValues = new ArrayList<>();
+    if (parentConnectorRowMeta == null) {
+      return filterValues;
+    }
+
+    if (keyMappings != null && !keyMappings.isEmpty()) {
+      // Explicit mappings: groupColumn → connectorColumn
+      for (GroupKeyMapping mapping : keyMappings) {
+        if (mapping == null) {
+          continue;
+        }
+        String groupCol = StringUtils.trimToNull(mapping.getGroupColumn());
+        String connectorCol = StringUtils.trimToNull(mapping.getConnectorColumn());
+        if (groupCol == null || connectorCol == null) {
+          continue;
+        }
+        if (groupRow.getRowMeta().searchValueMeta(groupCol) == null) {
+          continue;
+        }
+        if (parentConnectorRowMeta.searchValueMeta(connectorCol) == null) {
+          continue;
+        }
+        try {
+          String filterValue = groupRow.getString(groupCol, null);
+          filterValues.add(new SimpleFilterValue(connectorCol, filterValue));
+        } catch (HopException e) {
+          throw new LeanException(
+              "Error converting group row field '" + groupCol + "' to String for key mapping", e);
+        }
+      }
+      return filterValues;
+    }
+
+    // Legacy: same column name on group row and connector output
+    for (IValueMeta groupValueMeta : groupRow.getRowMeta().getValueMetaList()) {
+      IValueMeta parentConnectorValueMeta =
+          parentConnectorRowMeta.searchValueMeta(groupValueMeta.getName());
+      if (parentConnectorValueMeta != null) {
+        String fieldName = groupValueMeta.getName();
+        try {
+          String filterValue = groupRow.getString(fieldName, null);
+          filterValues.add(new SimpleFilterValue(fieldName, filterValue));
+        } catch (HopException e) {
+          throw new LeanException(
+              "Error converting group row field name '" + fieldName + "' to String", e);
+        }
+      }
+    }
+    return filterValues;
+  }
+
+  /**
    * Gets variableSpace
    *
    * @return value of variableSpace
@@ -124,7 +189,6 @@ public class GroupDataContext implements IDataContext {
   public IVariables getVariables() {
     return variableSpace;
   }
-
 
   @Override
   public IHopMetadataProvider getMetadataProvider() {

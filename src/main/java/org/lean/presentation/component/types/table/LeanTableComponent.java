@@ -44,7 +44,11 @@ import org.lean.presentation.theme.LeanTheme;
 import org.lean.render.IRenderContext;
 
 @JsonDeserialize(as = LeanTableComponent.class)
-@LeanComponentPlugin(id = "LeanTableComponent", name = "Table", description = "A table component")
+@LeanComponentPlugin(
+    id = "LeanTableComponent",
+    name = "Table",
+    description = "A table component",
+    image = "ui/images/components/table.svg")
 @Getter
 @Setter
 public class LeanTableComponent extends LeanBaseComponent implements ILeanComponent {

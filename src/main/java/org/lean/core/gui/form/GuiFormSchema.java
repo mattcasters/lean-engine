@@ -31,6 +31,13 @@ public class GuiFormSchema {
    */
   private List<GuiFormComponentTypeInfo> componentCatalog = new ArrayList<>();
 
+  /**
+   * Available connector plugin types for nested chain / connector-list editors. Populated when the
+   * schema contains a {@code LIST} field with {@code itemKind=connector}. Same shape as the
+   * component catalog (plugin id, name, description, field sections).
+   */
+  private List<GuiFormComponentTypeInfo> connectorCatalog = new ArrayList<>();
+
   public GuiFormSchema(String pluginId, String pluginName) {
     this.pluginId = pluginId;
     this.pluginName = pluginName;

@@ -26,7 +26,8 @@ import org.lean.presentation.datacontext.IDataContext;
     id = "DistinctConnector",
     name = "Select distinct rows",
     description =
-        "Drops rows equal to the previous row (adjacent distinct); sort first for full uniqueness")
+        "Drops rows equal to the previous row (adjacent distinct); sort first for full uniqueness",
+    image = "ui/images/connectors/distinct.svg")
 public class LeanDistinctConnector extends LeanBaseConnector implements ILeanConnector {
 
   @JsonIgnore protected ArrayBlockingQueue<Object> finishedQueue;

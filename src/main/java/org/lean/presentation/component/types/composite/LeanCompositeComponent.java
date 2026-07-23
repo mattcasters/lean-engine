@@ -56,7 +56,8 @@ import lombok.Setter;
 @LeanComponentPlugin(
     id = "LeanCompositeComponent",
     name = "Composite",
-    description = "In this component you can place other components")
+    description = "In this component you can place other components",
+    image = "ui/images/components/composite.svg")
 @Getter
 @Setter
 public class LeanCompositeComponent extends LeanBaseComponent implements ILeanComponent {

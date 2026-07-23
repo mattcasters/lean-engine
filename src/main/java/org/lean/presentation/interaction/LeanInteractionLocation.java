@@ -47,26 +47,60 @@ public class LeanInteractionLocation {
   }
 
   public boolean matches(DrawnItem drawnItem) {
+    if (drawnItem == null) {
+      return false;
+    }
     if (StringUtils.isNotEmpty(componentName)
         && !drawnItem.getComponentName().equals(componentName)) {
       return false;
     }
-    if (StringUtils.isNotEmpty(componentPluginId)
+
+    // Whole-component interactions: any drawn item that belongs to the component counts
+    // (Component area, series labels, cells, …). Hit-testing usually returns the top-most
+    // ComponentItem, not the Component envelope — still match so the whole area is active.
+    boolean wholeComponent =
+        StringUtils.isNotEmpty(itemType)
+            && DrawnItem.DrawnItemType.Component.name().equals(itemType);
+
+    if (!wholeComponent
+        && StringUtils.isNotEmpty(componentPluginId)
+        && StringUtils.isNotEmpty(drawnItem.getComponentPluginId())
         && !drawnItem.getComponentPluginId().equals(componentPluginId)) {
       return false;
     }
-    if (StringUtils.isNotEmpty(itemType) && !drawnItem.getType().name().equals(itemType)) {
+    // Soft plugin check for whole-component: only enforce when the configured plugin id
+    // looks like a real plugin id (e.g. LeanLineChartComponent), not a mistaken component name.
+    if (wholeComponent
+        && StringUtils.isNotEmpty(componentPluginId)
+        && StringUtils.isNotEmpty(drawnItem.getComponentPluginId())
+        && componentPluginId.startsWith("Lean")
+        && !drawnItem.getComponentPluginId().equals(componentPluginId)) {
       return false;
     }
-    if (StringUtils.isNotEmpty(itemCategory)
-        && !drawnItem.getCategory().equals(itemCategory)) {
+
+    if (StringUtils.isNotEmpty(itemType)) {
+      if (wholeComponent) {
+        // Accept Component or any ComponentItem of this component (name already checked).
+      } else if (!drawnItem.getType().name().equals(itemType)) {
+        return false;
+      }
+    }
+    if (!wholeComponent
+        && StringUtils.isNotEmpty(itemCategory)
+        && (drawnItem.getCategory() == null
+            || !drawnItem.getCategory().equals(itemCategory))) {
       return false;
     }
-    if (!dimensionColumns.isEmpty()) {
+    if (dimensionColumns != null && !dimensionColumns.isEmpty()) {
+      if (drawnItem.getContext() == null || drawnItem.getContext().getDimensions() == null) {
+        return false;
+      }
       for (String dimensionName : dimensionColumns) {
         boolean found = false;
         for (LeanColumn dimension : drawnItem.getContext().getDimensions()) {
-          if (dimension.getColumnName().equals(dimensionName)) {
+          if (dimension != null
+              && dimension.getColumnName() != null
+              && dimension.getColumnName().equals(dimensionName)) {
             found = true;
             break;
           }

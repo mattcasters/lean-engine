@@ -20,7 +20,8 @@ import org.lean.presentation.datacontext.IDataContext;
 @LeanConnectorPlugin(
     id = "MetadataTypesConnector",
     name = "Metadata types",
-    description = "Lists the available metadata types")
+    description = "Lists the available metadata types",
+    image = "ui/images/connectors/metadata-types.svg")
 public class LeanMetadataTypesConnector extends LeanBaseConnector implements ILeanConnector {
 
   public LeanMetadataTypesConnector() {
