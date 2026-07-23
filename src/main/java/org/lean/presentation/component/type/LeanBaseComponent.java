@@ -415,7 +415,9 @@ public abstract class LeanBaseComponent implements ILeanComponent {
       LeanGeometry geometry = new LeanGeometry(0, 0, width, height);
       return geometry;
     } else {
-      LeanGeometry geometry = results.findGeometry(componentName);
+      // Prefer first part geometry so multi-page tables expose a stable page-1 box
+      // for relative attachments of later siblings (charts, labels, …).
+      LeanGeometry geometry = results.findFirstGeometry(componentName);
       if (geometry == null) {
         throw new LeanException(
             "Unable to find the geometry of component "
@@ -451,10 +453,10 @@ public abstract class LeanBaseComponent implements ILeanComponent {
       LeanLayoutResults results)
       throws LeanException {
 
-    // Get the current page on which we're rendering...
-    // Create a new one if we need to move on to a next page
-    //
-    LeanRenderPage renderPage = results.getCurrentRenderPage(page);
+    // Non-flowing components (charts, labels, …) must attach to the first body page for this
+    // logical page. Multi-page tables leave getCurrentRenderPage() on the last overflow page;
+    // placing a chart there hides it from page 1 (products / Bar Chart next to ProductsTable).
+    LeanRenderPage renderPage = results.getFirstRenderPage(page);
 
     // Calculate the expected geometry for this component
     //
@@ -464,12 +466,13 @@ public abstract class LeanBaseComponent implements ILeanComponent {
     int bottomOfComponent = expectedGeometry.getY() + expectedGeometry.getHeight();
     int usablePageHeight = presentation.getUsableHeight(page);
 
-    // Check if the component fits on the current page (height only for now).
+    // Check if the component fits on the first page (height only for now).
+    // If not, overflow to a new page after the first (rare for side-by-side charts).
     //
     if (bottomOfComponent > usablePageHeight) {
-      // Component is too large, move it to a new page based upon the same...
-      //
-      renderPage = results.addNewPage(page, renderPage);
+      // Component is too large for the first page — continue after the first page's chain
+      LeanRenderPage last = results.getCurrentRenderPage(page);
+      renderPage = results.addNewPage(page, last);
 
       // OK, now we render on this page...
       // We'll have to re-calculate the y-coordinate of the component to be at the very top of the

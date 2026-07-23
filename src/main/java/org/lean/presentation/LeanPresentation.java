@@ -762,7 +762,9 @@ public class LeanPresentation extends HopMetadataBase implements IHasIdentity, I
       String errorMessage,
       String errorDetail) {
     try {
-      LeanRenderPage renderPage = results.getCurrentRenderPage(page);
+      // Place error placeholders on the first body page so they stay visible next to
+      // multi-page tables (same rule as non-flowing doLayout).
+      LeanRenderPage renderPage = results.getFirstRenderPage(page);
       if (renderPage == null) {
         renderPage = results.addNewPage(page, null);
       }

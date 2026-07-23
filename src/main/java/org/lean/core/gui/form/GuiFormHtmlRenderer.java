@@ -551,26 +551,31 @@ public class GuiFormHtmlRenderer {
   private void renderLayoutSide(StringBuilder html, GuiFormField field) {
     String side = field.getFieldName(); // left/right/top/bottom
     String cap = capitalize(side);
-    html.append("<fieldset style=\"border-width: 1px;border-color: #777777\">\n");
+    html.append("<fieldset class=\"layout-side-fieldset\" data-layout-side=\"")
+        .append(side)
+        .append("\" style=\"border-width: 1px;border-color: #777777\">\n");
     html.append("  <Legend>").append(cap).append(" alignment</Legend>\n");
     html.append("  <label for=\"")
         .append(side)
         .append("Enabled\">")
         .append(cap)
         .append(" aligned</label>");
-    html.append("<input type=\"checkbox\" id=\"").append(side).append("Enabled\">\n");
+    html.append("<input type=\"checkbox\" id=\"")
+        .append(side)
+        .append("Enabled\">\n");
     html.append("  <label for=\"")
         .append(side)
-        .append("ObjectName\"> to </label>\n");
+        .append("ObjectName\"> Relative to component<br><span style=\"font-size:11px;color:#555\">")
+        .append("(empty = page edge)</span></label>\n");
     html.append("  <select id=\"")
         .append(side)
-        .append("ObjectName\" style=\"width: 50%\"></select><br>\n");
+        .append("ObjectName\" style=\"width: 50%\" title=\"Leave empty to attach to the page edge\"></select><br>\n");
     html.append("  <label for=\"")
         .append(side)
-        .append("Offset\">Offset: </label>");
+        .append("Offset\">Offset (px): </label>");
     html.append("<input type=\"text\" id=\"")
         .append(side)
-        .append("Offset\" style=\"width: 20%\">\n");
+        .append("Offset\" style=\"width: 20%\" title=\"Pixels from the chosen edge\">\n");
     html.append("  <label for=\"")
         .append(side)
         .append("Percentage\">Percentage: </label>");
@@ -579,10 +584,13 @@ public class GuiFormHtmlRenderer {
         .append("Percentage\" style=\"width: 20%\">\n");
     html.append("  <label for=\"")
         .append(side)
-        .append("Alignment\">From </label>");
+        .append("Alignment\">From edge </label>");
     html.append("<select id=\"")
         .append(side)
-        .append("Alignment\" style=\"width: 20%\"></select><br>\n");
+        .append("Alignment\" style=\"width: 20%\" title=\"Which edge of the page or reference component\"></select><br>\n");
+    html.append("  <p class=\"layout-side-hint editor-hint\" id=\"")
+        .append(side)
+        .append("LayoutHint\" style=\"margin:4px 0 0 0;font-size:11px;color:#345\"></p>\n");
     html.append("</fieldset>\n");
   }
 

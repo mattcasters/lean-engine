@@ -25,12 +25,23 @@ import org.lean.presentation.page.LeanPage;
 import lombok.Getter;
 import lombok.Setter;
 
-/** Contains layout results of a presentation */
+/**
+ * Contains layout results of a presentation.
+ *
+ * <p>Multi-part components (e.g. tables that paginate) call {@link #addComponentGeometry} once per
+ * part. Relative layout of later siblings must use the <b>first</b> part's geometry so charts
+ * attached to a table's right edge resolve against page&nbsp;1, not the short last-page fragment.
+ * {@link #findGeometry} continues to return the <b>last</b> geometry (group envelopes grow per row).
+ */
 @Getter
 @Setter
 public class LeanLayoutResults {
 
+  /** Last geometry written for a component name (existing callers / growing envelopes). */
   private Map<String, LeanGeometry> componentGeometryMap;
+
+  /** First geometry written for a component name (relative attachment resolution). */
+  private Map<String, LeanGeometry> firstComponentGeometryMap;
 
   private Map<String, Map<String, Object>> componentDataSetMap;
 
@@ -45,16 +56,40 @@ public class LeanLayoutResults {
   public LeanLayoutResults(ILogChannel log) {
     this.log = log;
     componentGeometryMap = new HashMap<>();
+    firstComponentGeometryMap = new HashMap<>();
     componentDataSetMap = new HashMap<>();
     renderPages = new ArrayList<>();
     id = UUID.randomUUID().toString();
   }
 
+  /**
+   * Last geometry registered for the component (group components update this as rows grow).
+   */
   public LeanGeometry findGeometry(String componentName) {
     return componentGeometryMap.get(componentName);
   }
 
+  /**
+   * First geometry registered for the component. Prefer this when resolving relative layout
+   * attachments so multi-page tables expose a stable page-1 box to siblings.
+   */
+  public LeanGeometry findFirstGeometry(String componentName) {
+    LeanGeometry first = firstComponentGeometryMap.get(componentName);
+    if (first != null) {
+      return first;
+    }
+    return componentGeometryMap.get(componentName);
+  }
+
   public void addComponentGeometry(String componentName, LeanGeometry geometry) {
+    if (componentName == null || geometry == null) {
+      return;
+    }
+    if (!firstComponentGeometryMap.containsKey(componentName)) {
+      // Clone so later mutations of part geometry do not alter the first-part snapshot
+      firstComponentGeometryMap.put(
+          componentName, new LeanGeometry(geometry.getX(), geometry.getY(), geometry.getWidth(), geometry.getHeight()));
+    }
     componentGeometryMap.put(componentName, geometry);
   }
 
@@ -103,6 +138,10 @@ public class LeanLayoutResults {
     }
   }
 
+  /**
+   * Most recently created render page for this logical page (used while multi-page tables
+   * continue flowing).
+   */
   public LeanRenderPage getCurrentRenderPage(LeanPage page) {
     for (int i = renderPages.size() - 1; i >= 0; i--) {
       LeanPage renderPage = renderPages.get(i).getPage();
@@ -118,6 +157,23 @@ public class LeanLayoutResults {
 
     // No page with this number found, create a new one...
     //
+    return addNewPage(page, null);
+  }
+
+  /**
+   * First render page for this logical page. Non-flowing components (charts, labels, …) that are
+   * laid out after a multi-page table should place themselves here so they appear next to the
+   * table on page&nbsp;1 instead of only on the last overflow page.
+   */
+  public LeanRenderPage getFirstRenderPage(LeanPage page) {
+    for (int i = 0; i < renderPages.size(); i++) {
+      LeanPage renderPage = renderPages.get(i).getPage();
+      if (page.isHeader() && renderPage.isHeader()
+          || page.isFooter() && renderPage.isFooter()
+          || renderPage.equals(page)) {
+        return renderPages.get(i);
+      }
+    }
     return addNewPage(page, null);
   }
 
