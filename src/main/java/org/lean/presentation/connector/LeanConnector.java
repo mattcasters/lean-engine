@@ -32,8 +32,6 @@ public class LeanConnector extends HopMetadataBase implements IHopMetadata {
 
   @HopMetadataProperty @JsonProperty private ILeanConnector connector;
 
-  @HopMetadataProperty @JsonProperty private boolean shared;
-
   public LeanConnector() {}
 
   public LeanConnector(String name, ILeanConnector connector) {
@@ -50,7 +48,6 @@ public class LeanConnector extends HopMetadataBase implements IHopMetadata {
   public LeanConnector(LeanConnector c) {
     this.name = c.name;
     this.connector = c.connector == null ? null : c.connector.clone();
-    this.shared = c.shared;
   }
 
   /**

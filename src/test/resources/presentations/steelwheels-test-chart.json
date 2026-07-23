@@ -153,7 +153,6 @@
             "lineWidth": null,
             "drawingCurvedTrendLine": false
           },
-          "shared": false,
           "rotation": null,
           "transparency": null
         }
@@ -204,7 +203,6 @@
           "filename": "lean-logo.png",
           "scalePercent": "5"
         },
-        "shared": false,
         "rotation": null,
         "transparency": null
       },
@@ -254,7 +252,6 @@
           "verticalAlignment": "TOP",
           "customHtml": null
         },
-        "shared": false,
         "rotation": null,
         "transparency": null
       },
@@ -304,7 +301,6 @@
           "verticalAlignment": "TOP",
           "customHtml": null
         },
-        "shared": false,
         "rotation": null,
         "transparency": null
       }
@@ -365,7 +361,6 @@
           "verticalAlignment": "TOP",
           "customHtml": null
         },
-        "shared": false,
         "rotation": null,
         "transparency": null
       },
@@ -415,7 +410,6 @@
           "verticalAlignment": "TOP",
           "customHtml": null
         },
-        "shared": false,
         "rotation": null,
         "transparency": null
       }
@@ -430,8 +424,7 @@
         "pluginId": "SampleDataConnector",
         "sourceConnectorName": null,
         "rowCount": 100
-      },
-      "shared": false
+      }
     },
     {
       "name": "territories",
@@ -440,8 +433,7 @@
         "sourceConnectorName": null,
         "databaseConnectionName": "SteelWheels",
         "sql": "select coalesce(territory, 'UNKNOWN') as territory, count(*) as cnt from customer_w_ter group by territory order by 1 asc; "
-      },
-      "shared": false
+      }
     }
   ]
 }

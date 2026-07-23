@@ -108,7 +108,6 @@ class FormEndToEndTest {
 
     LeanSampleDataConnector plugin = new LeanSampleDataConnector(42);
     LeanConnector original = new LeanConnector("Sample Data", plugin);
-    original.setShared(false);
     serializer.save(original);
 
     LeanConnector loaded = serializer.load("Sample Data");

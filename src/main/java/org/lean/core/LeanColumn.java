@@ -29,6 +29,11 @@ public class LeanColumn {
   @HopMetadataProperty
   private LeanVerticalAlignment verticalAlignment;
 
+  /**
+   * Explicit column width in pixels for table layout. {@code 0} (default) means auto-detect from
+   * header/cell content when drawing. A positive value is used as the column width when rendering
+   * tables.
+   */
   @HopMetadataProperty private int width;
 
   @HopMetadataProperty private String formatMask;

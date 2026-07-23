@@ -112,7 +112,6 @@
             },
             "gridLineWidth": null
           },
-          "shared": false,
           "rotation": null,
           "transparency": null
         }
@@ -163,7 +162,6 @@
           "filename": "lean-logo.png",
           "scalePercent": "5"
         },
-        "shared": false,
         "rotation": null,
         "transparency": null
       },
@@ -213,7 +211,6 @@
           "verticalAlignment": "TOP",
           "customHtml": null
         },
-        "shared": false,
         "rotation": null,
         "transparency": null
       },
@@ -263,7 +260,6 @@
           "verticalAlignment": "TOP",
           "customHtml": null
         },
-        "shared": false,
         "rotation": null,
         "transparency": null
       }
@@ -324,7 +320,6 @@
           "verticalAlignment": "TOP",
           "customHtml": null
         },
-        "shared": false,
         "rotation": null,
         "transparency": null
       },
@@ -374,7 +369,6 @@
           "verticalAlignment": "TOP",
           "customHtml": null
         },
-        "shared": false,
         "rotation": null,
         "transparency": null
       }
@@ -388,8 +382,7 @@
         "sourceConnectorName": null,
         "databaseConnectionName": "SteelWheels",
         "sql": "SELECT customernumber, customername, contactlastname, contactfirstname, phone, addressline1, addressline2, city, state, postalcode, country, salesrepemployeenumber, creditlimit FROM customers"
-      },
-      "shared": false
+      }
     }
   ]
 }

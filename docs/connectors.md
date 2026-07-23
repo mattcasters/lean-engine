@@ -130,7 +130,7 @@ Describe/sample must work from **form state**, not only saved metadata:
 
 | Field | Purpose |
 |-------|---------|
-| `leanConnectorJson` | Full Hop-format connector JSON (`name`, `shared`, `connector.{PluginId}: {…}`), same shape as save |
+| `leanConnectorJson` | Full Hop-format connector JSON (`name`, `connector.{PluginId}: {…}`), same shape as save |
 | `maxRows` | Optional; default 20; clamped to server max |
 | `renderId` | Optional; when present, presentation-local connectors + layout data context participate |
 | (optional later) | Parameter values for variable-driven SQL/REST |

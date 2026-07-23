@@ -70,9 +70,7 @@ public class GuiFormHtmlRenderer {
     appendConnectorFormActionBar(html, "connector");
 
     html.append("<label for=\"connectorName\">Connector name: </label>\n");
-    html.append("<input type=\"text\" id=\"connectorName\" name=\"connectorName\">\n<br>\n");
-    html.append("<input type=\"checkbox\" id=\"connectorShared\">\n");
-    html.append("<label for=\"connectorShared\">Shared?</label>\n<br><br>\n");
+    html.append("<input type=\"text\" id=\"connectorName\" name=\"connectorName\">\n<br><br>\n");
 
     for (GuiFormSection section : schema.getSections()) {
       renderSection(html, section, schema);
@@ -174,7 +172,6 @@ public class GuiFormHtmlRenderer {
           connectorJson["connector"][connectorPluginId] = iComponent;
         }
         document.getElementById("connectorName").value = connectorJson["name"] || "";
-        document.getElementById("connectorShared").checked = !!connectorJson["shared"];
         """);
     if (hasListFields(schema)) {
       html.append(
@@ -202,7 +199,6 @@ public class GuiFormHtmlRenderer {
           connectorJson["connector"][connectorPluginId] = iComponent;
         }
         connectorJson["name"] = document.getElementById("connectorName").value;
-        connectorJson["shared"] = document.getElementById("connectorShared").checked;
         iComponent["pluginId"] = connectorPluginId;
         """);
     for (GuiFormSection section : schema.getSections()) {

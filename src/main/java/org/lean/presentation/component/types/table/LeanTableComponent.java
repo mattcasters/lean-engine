@@ -751,6 +751,16 @@ public class LeanTableComponent extends LeanBaseComponent implements ILeanCompon
         maxHeights.set(i, globalMaxHeight);
       }
     }
+
+    // Explicit column width (> 0) overrides content-based auto width; 0 keeps auto-detect.
+    //
+    for (int i = 0; i < columnSelection.size(); i++) {
+      LeanColumn leanColumn = columnSelection.get(i);
+      if (leanColumn != null && leanColumn.getWidth() > 0) {
+        maxWidths.set(i, leanColumn.getWidth());
+      }
+    }
+
     return rowMeta;
   }
 

@@ -55,8 +55,6 @@ public class LeanTheme extends HopMetadataBase implements IHopMetadata {
 
   @HopMetadataProperty protected LeanColorRGB gridColor;
 
-  @HopMetadataProperty private boolean shared;
-
   public LeanTheme() {
     colors = new ArrayList<>();
   }

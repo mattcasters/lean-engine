@@ -44,7 +44,6 @@ public class LeanComponent extends HopMetadataBase implements IHopMetadata {
 
   @HopMetadataProperty private LeanLayout layout;
   @HopMetadataProperty private ILeanComponent component;
-  @HopMetadataProperty private boolean shared;
   @HopMetadataProperty private String rotation;
   @HopMetadataProperty private String transparency;
   @HopMetadataProperty private LeanSize clipSize;

@@ -17,8 +17,6 @@
 <label for="connectorName">Connector name: </label>
 <input type="text" id="connectorName" name="connectorName">
 <br>
-<input type="checkbox" id="connectorShared">
-<label for="connectorShared">Shared?</label>
 <br><br>
 <button type="button" class="collapsible">Sample data</button>
 <div class="content" style="display: block">
@@ -63,7 +61,6 @@ if (iComponent === undefined || iComponent === null) {
   connectorJson["connector"][connectorPluginId] = iComponent;
 }
 document.getElementById("connectorName").value = connectorJson["name"] || "";
-document.getElementById("connectorShared").checked = !!connectorJson["shared"];
 setElement(iComponent, "sourceConnectorName", "sourceConnectorName");
 setElement(iComponent, "rowCount", "rowCount");
 </script>
@@ -76,7 +73,6 @@ if (iComponent === undefined || iComponent === null) {
   connectorJson["connector"][connectorPluginId] = iComponent;
 }
 connectorJson["name"] = document.getElementById("connectorName").value;
-connectorJson["shared"] = document.getElementById("connectorShared").checked;
 iComponent["pluginId"] = connectorPluginId;
 getElement(iComponent, "sourceConnectorName", "sourceConnectorName");
 getElementInteger(iComponent, "rowCount", "rowCount");

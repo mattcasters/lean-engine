@@ -21,6 +21,7 @@ Inherited via `LeanBaseComponent` / `LeanComponent` wrapper:
 | `LeanTableComponent` | Table | Tabular layout of connector rows; can paginate |
 | `LeanBarChartComponent` | Bar chart | Categories + values (+ optional series) |
 | `LeanLineChartComponent` | Line chart | Categories + values (+ optional series) |
+| `LeanPieChartComponent` | Pie chart | Categories + values (optional donut, legend, %) |
 | `LeanCrosstabComponent` | Crosstab | Horizontal/vertical dimensions + facts/aggregations |
 | `LeanImageComponent` | Image | Raster image from path/URL (server-side load) |
 | `LeanSvgComponent` | SVG | Embed/scale SVG artwork |
@@ -46,6 +47,14 @@ Component type icons ship **with the plugin JAR** (lean-engine for built-ins).
 | List API | `GET plugins/components` includes `"image"` |
 | Image API | `GET plugins/components/{pluginId}/image` |
 | Browser | Palette + page component list use the image API with name/description tooltips |
+
+## Pie chart (`LeanPieChartComponent`)
+
+- **Data:** one or more **horizontal dimensions** (slice categories; multi-dim labels join with `-`) and **exactly one fact** with aggregation (SUM / COUNT / AVERAGE as supported by the pivot). Vertical dimensions are ignored in v1.
+- **Options:** title, margins, legend (`RIGHT` / `BOTTOM`), on-slice labels, percentages, fact values, **inner radius %** (0 = pie, e.g. 50 = donut), start angle (degrees, default −90 = top), clockwise.
+- **Values:** null/missing → 0; **negative values are skipped**; total 0 draws an empty outline only.
+- **Colors:** theme stable colors keyed by category label (`getStableColor`).
+- **Interactions:** `DrawnItem`s for title, each slice (`ChartLabel`), and legend entries (`LegendEntry`).
 
 ## Data-driven components
 
